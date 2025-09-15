@@ -1,0 +1,15 @@
+.footer {
+  background-color: #004080;
+  color: white;
+  padding: 50px;
+  text-align: left;
+}
+
+.footer h3 {
+  margin-bottom: 20px;
+}
+
+.footer p {
+  margin-bottom: 10px;
+  line-height: 1.5;
+}

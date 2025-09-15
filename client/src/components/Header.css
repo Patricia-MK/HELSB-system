@@ -1,0 +1,28 @@
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 50px;
+  background-color: #004080;
+  color: white;
+}
+
+.header ul {
+  list-style: none;
+  display: flex;
+  gap: 20px;
+}
+
+.header li {
+  cursor: pointer;
+  transition: color 0.3s;
+}
+
+.header li:hover {
+  color: #ffcc00;
+}
+
+.logo {
+  font-weight: bold;
+  font-size: 24px;
+}

@@ -1,0 +1,25 @@
+.info-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 50px;
+}
+
+.info-text {
+  max-width: 50%;
+}
+
+.info-text h2 {
+  color: #004080;
+  font-size: 28px;
+}
+
+.info-text p {
+  margin-top: 20px;
+  font-size: 16px;
+}
+
+.info-image img {
+  width: 400px;
+  border-radius: 10px;
+}
