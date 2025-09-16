@@ -1,7 +1,10 @@
 import React from "react";
-import "./FloatingButtons.css";
+import { useNavigate } from "react-router-dom";
+import "./FloatingButtons.css"; // make sure you have this CSS
 
 const FloatingButtons = ({ activeTab, setActiveTab }) => {
+  const navigate = useNavigate();
+
   return (
     <div className="floating-buttons">
       <button
@@ -16,12 +19,7 @@ const FloatingButtons = ({ activeTab, setActiveTab }) => {
       >
         Beneficiaries
       </button>
-      <button
-        className={activeTab === "screening" ? "active" : ""}
-        onClick={() => setActiveTab("screening")}
-      >
-        Screening
-      </button>
+      <button onClick={() => navigate("/login")}>Screening</button>
     </div>
   );
 };

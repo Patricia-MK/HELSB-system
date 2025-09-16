@@ -1,25 +1,25 @@
 .info-section {
   display: flex;
-  justify-content: space-between;
   align-items: flex-start;
-  padding: 50px;
+  justify-content: flex-start; /* align text to left */
+  gap: 30px;
+  margin: 40px 50px;
 }
 
 .info-text {
-  max-width: 50%;
-}
-
-.info-text h2 {
-  color: #004080;
-  font-size: 28px;
-}
-
-.info-text p {
-  margin-top: 20px;
+  flex: 2; /* more space for text */
   font-size: 16px;
+  line-height: 1.6;
+}
+
+.info-image {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .info-image img {
-  width: 400px;
-  border-radius: 10px;
+  width: 180px; /* smaller image */
+  border-radius: 8px;
 }
