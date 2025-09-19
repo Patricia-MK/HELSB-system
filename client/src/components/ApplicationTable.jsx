@@ -3,27 +3,32 @@ import ApplicationRow from "./ApplicationRow";
 
 const ApplicationTable = ({ applications, onViewClick }) => {
   return (
-    <table className="min-w-full border">
-      <thead>
-        <tr className="bg-gray-200">
-          <th className="p-2 border">Name</th>
-          <th className="p-2 border">NRC</th>
-          <th className="p-2 border">Program</th>
-          <th className="p-2 border">GPA</th>
-          <th className="p-2 border">Status</th>
-          <th className="p-2 border">Action</th>
-        </tr>
-      </thead>
-      <tbody>
-        {applications.map((app) => (
-          <ApplicationRow
-            key={app._id}
-            app={app}
-            onViewClick={() => onViewClick(app)}
-          />
-        ))}
-      </tbody>
-    </table>
+    <div className="overflow-x-auto rounded-lg shadow">
+      <table className="min-w-full border border-gray-200">
+        <thead className="bg-blue-900 text-white">
+          <tr>
+            <th className="px-4 py-2 text-left">Name</th>
+            <th className="px-4 py-2 text-left">NRC</th>
+            <th className="px-4 py-2 text-left">Program</th>
+            <th className="px-4 py-2 text-left">Loan Number</th>
+            <th className="px-4 py-2 text-left">Status</th>
+            <th className="px-4 py-2 text-left">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {applications.map((app, idx) => (
+            <tr
+              key={app._id}
+              className={`${
+                idx % 2 === 0 ? "bg-gray-50" : "bg-white"
+              } hover:bg-blue-100 transition`}
+            >
+              <ApplicationRow app={app} onViewClick={() => onViewClick(app)} />
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
   );
 };
 
