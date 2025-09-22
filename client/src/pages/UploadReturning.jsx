@@ -58,7 +58,7 @@ const UploadReturning = () => {
     >
       <div className="upload-overlay">
         <main className="upload-container">
-          <h2>Upload Documents - Returning Student</h2>
+          <h2>Upload Documents</h2>
           <p>Please upload all required documents carefully. All fields are required.</p>
 
           <form onSubmit={handleSubmit}>

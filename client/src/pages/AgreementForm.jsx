@@ -51,7 +51,7 @@ function AgreementForm() {
     >
       <div className="agreement-container">
         <h2>Student Loan Agreement Form (Undergraduate)</h2>
-        <h3>Fill in this form to start the screening process</h3>
+
         <form onSubmit={handleSubmit} autoComplete="off">
           <div className="section grid-3">
             <input
