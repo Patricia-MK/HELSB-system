@@ -29,6 +29,8 @@ const UploadReturning = () => {
       }
     } catch (_) {}
 
+    formData.append("loanType", "returning"); // ✅ FIX
+
     try {
       const response = await fetch("/api/upload/documents", {
         method: "POST",
@@ -41,7 +43,8 @@ const UploadReturning = () => {
         alert("Documents uploaded successfully!");
         window.location.replace("/student-dashboard");
       } else {
-        alert("Upload failed. Please try again.");
+        const errData = await response.json();
+        alert(errData.message || "Upload failed. Please try again.");
       }
     } catch (err) {
       console.error(err);

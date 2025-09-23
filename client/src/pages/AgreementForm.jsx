@@ -1,6 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import "./AgreementForm.css";
-import capBackground from "../assets/images/cap.jpg"; // Correct path to your image
+import capBackground from "../assets/images/cap.jpg"; // Correct path
+import axios from "axios";
 
 function AgreementForm() {
   const [formData, setFormData] = useState({
@@ -26,6 +27,20 @@ function AgreementForm() {
     agree: false,
   });
 
+  // Pre-fill student details from localStorage
+  useEffect(() => {
+    const storedUser = localStorage.getItem("user");
+    if (storedUser) {
+      const user = JSON.parse(storedUser);
+      setFormData((prev) => ({
+        ...prev,
+        studentName: user.fullName || "",
+        studentNumber: user.studentID || "",
+        studentLoanNo: user.loanNumber || "",
+      }));
+    }
+  }, []);
+
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
     setFormData((prevData) => ({
@@ -34,14 +49,40 @@ function AgreementForm() {
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!formData.agree) {
       alert("Please agree to the terms before submitting.");
       return;
     }
-    console.log("Agreement submitted:", formData);
-    alert("Agreement submitted successfully (no backend connected yet).");
+
+    try {
+      const res = await axios.post("http://localhost:5000/api/agreements", formData);
+      alert(res.data.message);
+      // Reset form but keep pre-filled student details
+      setFormData((prev) => ({
+        ...prev,
+        receiptNumber: "",
+        bankName: "",
+        accountName: "",
+        branchName: "",
+        nrcNo: "",
+        bankAccountNo: "",
+        zraTpin: "",
+        napsaNo: "",
+        program: "",
+        year: "",
+        institution: "",
+        qualification: "",
+        school: "",
+        loanRate: "",
+        ceoName: "",
+        date: "",
+        agree: false,
+      }));
+    } catch (err) {
+      alert(err.response?.data?.message || "Server error. Please try again later.");
+    }
   };
 
   return (
@@ -98,6 +139,7 @@ function AgreementForm() {
               placeholder="University Student Identity No"
               value={formData.studentNumber}
               onChange={handleChange}
+              readOnly
             />
             <input
               type="text"
@@ -112,6 +154,7 @@ function AgreementForm() {
               placeholder="Student Loan No"
               value={formData.studentLoanNo}
               onChange={handleChange}
+              readOnly
             />
             <input
               type="text"
@@ -160,7 +203,7 @@ function AgreementForm() {
                 name="studentName"
                 placeholder="Student Name"
                 value={formData.studentName}
-                onChange={handleChange}
+                readOnly
               />{" "}
               for the purpose of providing a student loan at the rate of{" "}
               <input
