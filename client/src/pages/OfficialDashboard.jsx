@@ -11,10 +11,10 @@ const OfficialDashboard = () => {
   const [modalOpen, setModalOpen] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  // Fetch applications from backend
+  // Fetch applications from official route
   useEffect(() => {
     axios
-      .get("/api/applications")
+      .get("http://localhost:5000/api/official/applications")
       .then((res) => {
         setApplications(res.data);
         setLoading(false);
@@ -37,12 +37,10 @@ const OfficialDashboard = () => {
 
   const updateStatus = (id, status) => {
     axios
-      .patch(`/api/applications/${id}/decision`, { status })
+      .patch(`http://localhost:5000/api/official/applications/${id}/status`, { status })
       .then(() => {
         setApplications((prev) =>
-          prev.map((app) =>
-            app._id === id ? { ...app, status } : app
-          )
+          prev.map((app) => (app._id === id ? { ...app, status } : app))
         );
         handleCloseModal();
       })
@@ -54,7 +52,7 @@ const OfficialDashboard = () => {
 
   return (
     <div className="flex flex-col h-screen">
-      <Navbar />
+      <Navbar role="official" />
       <div className="flex flex-1">
         <Sidebar />
         <main className="flex-1 p-6">
