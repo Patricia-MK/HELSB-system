@@ -1,35 +1,38 @@
-// src/components/UserTable.jsx
 import React from "react";
 
-const users = [
-  { name: "John Doe", email: "john@example.com", role: "Student" },
-  { name: "Jane Smith", email: "jane@example.com", role: "Official" },
-];
-
-const UserTable = () => {
+const UserTable = ({ users }) => {
   return (
     <div className="overflow-x-auto">
-      <table className="min-w-full divide-y divide-gray-200">
-        <thead className="bg-gray-50">
+      <table className="min-w-full border border-gray-300">
+        <thead className="bg-gray-100">
           <tr>
-            <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Name</th>
-            <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Email</th>
-            <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Role</th>
-            <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Actions</th>
+            <th className="px-4 py-2 border">Full Name</th>
+            <th className="px-4 py-2 border">Email</th>
+            <th className="px-4 py-2 border">Role</th>
+            <th className="px-4 py-2 border">Year</th>
+            <th className="px-4 py-2 border">Student ID</th>
+            <th className="px-4 py-2 border">Loan Number</th>
           </tr>
         </thead>
-        <tbody className="bg-white divide-y divide-gray-200">
-          {users.map((user, index) => (
-            <tr key={index} className="hover:bg-gray-50">
-              <td className="px-6 py-4 text-gray-800">{user.name}</td>
-              <td className="px-6 py-4 text-gray-800">{user.email}</td>
-              <td className="px-6 py-4 text-gray-800">{user.role}</td>
-              <td className="px-6 py-4 space-x-2">
-                <button className="text-blue-500 hover:underline">Edit</button>
-                <button className="text-red-500 hover:underline">Delete</button>
+        <tbody>
+          {users.length === 0 ? (
+            <tr>
+              <td colSpan="6" className="text-center p-4">
+                No users found
               </td>
             </tr>
-          ))}
+          ) : (
+            users.map((user) => (
+              <tr key={user._id} className="hover:bg-gray-50">
+                <td className="px-4 py-2 border">{user.fullName}</td>
+                <td className="px-4 py-2 border">{user.email}</td>
+                <td className="px-4 py-2 border">{user.role}</td>
+                <td className="px-4 py-2 border">{user.year || "-"}</td>
+                <td className="px-4 py-2 border">{user.studentID || "-"}</td>
+                <td className="px-4 py-2 border">{user.loanNumber || "-"}</td>
+              </tr>
+            ))
+          )}
         </tbody>
       </table>
     </div>

@@ -1,11 +1,17 @@
+// server.js
 require("dotenv").config();
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
+const path = require("path");
+
+// Import Routes
 const authRoutes = require("./routes/auth");
 const agreementRoutes = require("./routes/agreementRoutes");
 const uploadRoutes = require("./routes/upload");
-const path = require("path");
+const applicationRoutes = require("./routes/applicationRoutes");
+const officialRoutes = require("./routes/officialRoute");
+const adminRoutes = require("./routes/adminRoute");
 
 const app = express();
 
@@ -20,6 +26,9 @@ app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 app.use("/api/auth", authRoutes);
 app.use("/api/agreements", agreementRoutes);
 app.use("/api/upload", uploadRoutes);
+app.use("/api/applications", applicationRoutes);
+app.use("/api/official", officialRoutes);
+app.use("/api/admin", adminRoutes);
 
 // DB Connection
 mongoose.connect("mongodb://127.0.0.1:27017/helsb_db", {

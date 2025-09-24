@@ -1,73 +1,58 @@
-// src/pages/AdminDashboard.jsx
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import Navbar from "../components/Navbar";
 import AdminSidebar from "../components/AdminSidebar";
-import ApplicationTable from "../components/ApplicationTable";
 import UserTable from "../components/UserTable";
+import ApplicationTable from "../components/ApplicationTable";
+import axios from "axios";
 
 const AdminDashboard = () => {
-  const [activeTab, setActiveTab] = useState("Dashboard");
+  const [users, setUsers] = useState([]);
+  const [applications, setApplications] = useState([]);
+  const [loadingUsers, setLoadingUsers] = useState(true);
+  const [loadingApps, setLoadingApps] = useState(true);
 
-  const stats = [
-    { title: "Total Students", value: 1 },
-    { title: "Total Officials", value: 1 },
-    { title: "Total Applications", value: 2 },
-  ];
+  // Fetch all users
+  useEffect(() => {
+    axios
+      .get("http://localhost:5000/api/admin/users")
+      .then((res) => {
+        setUsers(res.data);
+        setLoadingUsers(false);
+      })
+      .catch((err) => {
+        console.error(err);
+        setLoadingUsers(false);
+      });
+  }, []);
+
+  // Fetch all applications
+  useEffect(() => {
+    axios
+      .get("http://localhost:5000/api/admin/applications")
+      .then((res) => {
+        setApplications(res.data);
+        setLoadingApps(false);
+      })
+      .catch((err) => {
+        console.error(err);
+        setLoadingApps(false);
+      });
+  }, []);
 
   return (
-    <div className="flex h-screen bg-gray-100">
-      {/* Sidebar (left) */}
-      <AdminSidebar activeTab={activeTab} setActiveTab={setActiveTab} />
+    <div className="flex flex-col h-screen">
+      <Navbar role="admin" />
+      <div className="flex flex-1">
+        <AdminSidebar />
+        <main className="flex-1 p-6 overflow-auto">
+          <h2 className="text-2xl font-bold mb-4">Users</h2>
+          {loadingUsers ? <p>Loading users...</p> : <UserTable users={users} />}
 
-      {/* Main content (right) */}
-      <div className="flex-1 flex flex-col overflow-y-auto">
-        {/* Top header */}
-        <header className="bg-white shadow p-4">
-          <div className="max-w-7xl mx-auto">
-            <h1 className="text-2xl font-bold text-gray-800">{activeTab}</h1>
-          </div>
-        </header>
-
-        {/* Page content */}
-        <main className="p-6 max-w-7xl mx-auto w-full space-y-6">
-          {activeTab === "Dashboard" && (
-            <>
-              {/* Stats cards (see Step 3) */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-                {stats.map((stat) => (
-                  <div key={stat.title} className="bg-white rounded-2xl shadow p-6 text-center">
-                    <p className="text-gray-500">{stat.title}</p>
-                    <p className="text-3xl font-bold text-gray-800 mt-2">{stat.value}</p>
-                  </div>
-                ))}
-              </div>
-
-              {/* Recent Applications card */}
-              <div className="bg-white rounded-2xl shadow p-6">
-                <h2 className="text-xl font-semibold mb-4">Recent Applications</h2>
-                <ApplicationTable />
-              </div>
-            </>
-          )}
-
-          {activeTab === "Applications" && (
-            <div className="bg-white rounded-2xl shadow p-6">
-              <h2 className="text-xl font-semibold mb-4">All Applications</h2>
-              <ApplicationTable />
-            </div>
-          )}
-
-          {activeTab === "Users" && (
-            <div className="bg-white rounded-2xl shadow p-6">
-              <h2 className="text-xl font-semibold mb-4">Users</h2>
-              <UserTable />
-            </div>
-          )}
-
-          {activeTab === "Reports" && (
-            <div className="bg-white rounded-2xl shadow p-6">
-              <h2 className="text-xl font-semibold mb-4">Reports</h2>
-              <p className="text-gray-600">Charts and summaries will appear here.</p>
-            </div>
+          <h2 className="text-2xl font-bold mb-4 mt-6">Applications</h2>
+          {loadingApps ? (
+            <p>Loading applications...</p>
+          ) : (
+            <ApplicationTable applications={applications} />
           )}
         </main>
       </div>
