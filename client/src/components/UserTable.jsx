@@ -1,53 +1,32 @@
+// src/components/UserTable.jsx
 import React from "react";
 
-const UserTable = ({ users, onEdit, onDelete }) => {
+const users = [
+  { name: "John Doe", email: "john@example.com", role: "Student" },
+  { name: "Jane Smith", email: "jane@example.com", role: "Official" },
+];
+
+const UserTable = () => {
   return (
-    <div className="overflow-x-auto rounded-lg shadow">
-      <table className="min-w-full border border-gray-200">
-        <thead className="bg-blue-900 text-white">
+    <div className="overflow-x-auto">
+      <table className="min-w-full divide-y divide-gray-200">
+        <thead className="bg-gray-50">
           <tr>
-            <th className="px-4 py-2 text-left">Name</th>
-            <th className="px-4 py-2 text-left">Email</th>
-            <th className="px-4 py-2 text-left">Role</th>
-            <th className="px-4 py-2 text-left">Actions</th>
+            <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Name</th>
+            <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Email</th>
+            <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Role</th>
+            <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Actions</th>
           </tr>
         </thead>
-        <tbody>
-          {users.map((user, idx) => (
-            <tr
-              key={user._id}
-              className={`${
-                idx % 2 === 0 ? "bg-gray-50" : "bg-white"
-              } hover:bg-blue-100 transition`}
-            >
-              <td className="px-4 py-2">{user.name}</td>
-              <td className="px-4 py-2">{user.email}</td>
-              <td className="px-4 py-2">
-                <span
-                  className={`px-2 py-1 rounded-full text-white text-sm ${
-                    user.role === "Admin"
-                      ? "bg-purple-600"
-                      : user.role === "Official"
-                      ? "bg-blue-500"
-                      : "bg-green-500"
-                  }`}
-                >
-                  {user.role}
-                </span>
-              </td>
-              <td className="px-4 py-2 space-x-2">
-                <button
-                  onClick={() => onEdit(user)}
-                  className="px-3 py-1 bg-yellow-400 rounded hover:bg-yellow-500 text-white transition"
-                >
-                  Edit
-                </button>
-                <button
-                  onClick={() => onDelete(user._id)}
-                  className="px-3 py-1 bg-red-500 rounded hover:bg-red-600 text-white transition"
-                >
-                  Delete
-                </button>
+        <tbody className="bg-white divide-y divide-gray-200">
+          {users.map((user, index) => (
+            <tr key={index} className="hover:bg-gray-50">
+              <td className="px-6 py-4 text-gray-800">{user.name}</td>
+              <td className="px-6 py-4 text-gray-800">{user.email}</td>
+              <td className="px-6 py-4 text-gray-800">{user.role}</td>
+              <td className="px-6 py-4 space-x-2">
+                <button className="text-blue-500 hover:underline">Edit</button>
+                <button className="text-red-500 hover:underline">Delete</button>
               </td>
             </tr>
           ))}

@@ -17,7 +17,7 @@ function App() {
       <Route path="/student-dashboard" element={<StudentDashboard />} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/official-dashboard" element={<OfficialDashboard />} />
-      <Route path="/admin" element={<AdminDashboard />} />
+      <Route path="/admin-dashboard" element={<AdminDashboard />} />
       <Route path="/agreement-form" element={<AgreementForm />} />
       <Route path="/upload-first-timer" element={<UploadFirstTimer />} />
       <Route path="/upload-returning" element={<UploadReturning />} />

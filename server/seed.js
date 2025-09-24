@@ -15,7 +15,7 @@ const seedUsers = async () => {
     // Students
     { fullName: "Dalitso Phiri", email: "dalitsophiri@gmail.com", password: "2021512258", role: "student", year: 4, studentID: "2021512258", loanNumber: "2110745461" },
     { fullName: "Chaabilo Lubobya", email: "chaabilolubobya@gmail.com", password: "2021418235", role: "student", year: 4, studentID: "2021418235", loanNumber: "2110745466" },
-    { fullName: "Patricia Mboma Kashweka", email: "patriciakambomakashweka@gmail.com", password: "2021527433", role: "student", year: 3, studentID: "2021527433", loanNumber: "2110745463" },
+    { fullName: "Patricia Mboma Kashweka", email: "patriciambomakashweka@gmail.com", password: "2021527433", role: "student", year: 3, studentID: "2021527433", loanNumber: "2110745463" },
     { fullName: "John Banda", email: "johnbanda@gmail.com", password: "2024100001", role: "student", year: 1, studentID: "2024100001", loanNumber: "2110745470" },
     { fullName: "Mary Zulu", email: "maryzulu@gmail.com", password: "2024100002", role: "student", year: 1, studentID: "2024100002", loanNumber: "2110745471" },
     { fullName: "Peter Mwansa", email: "petermwansa@gmail.com", password: "2023100001", role: "student", year: 3, studentID: "2023100001", loanNumber: "2110745472" },
