@@ -29,8 +29,6 @@ const UploadReturning = () => {
       }
     } catch (_) {}
 
-    formData.append("loanType", "returning"); // ✅ FIX
-
     try {
       const response = await fetch("/api/upload/documents", {
         method: "POST",

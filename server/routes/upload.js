@@ -39,9 +39,9 @@ router.post(
   ]),
   async (req, res) => {
     try {
-      const { studentId, loanType } = req.body;
-      if (!studentId || !loanType) {
-        return res.status(400).json({ message: "Missing studentId or loanType" });
+      const { studentId } = req.body;
+      if (!studentId) {
+        return res.status(400).json({ message: "Missing studentId" });
       }
 
       const docPaths = {};
@@ -51,12 +51,11 @@ router.post(
 
       const newUpload = new Upload({
         studentId,
-        loanType,
         documents: docPaths,
       });
 
       await newUpload.save();
-      res.json({ status: "success", upload: newUpload });
+      res.status(200).json({ status: "success", upload: newUpload, message: "Documents uploaded successfully!" });
     } catch (err) {
       console.error(err);
       res.status(500).json({ message: "Server error" });

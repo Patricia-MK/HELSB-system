@@ -2,8 +2,11 @@ import React, { useState, useEffect } from "react";
 import "./AgreementForm.css";
 import capBackground from "../assets/images/cap.jpg"; // Correct path
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 function AgreementForm() {
+  const navigate = useNavigate();
+
   const [formData, setFormData] = useState({
     receiptNumber: "",
     bankName: "",
@@ -20,9 +23,9 @@ function AgreementForm() {
     studentNumber: "",
     qualification: "",
     school: "",
-    loanRate: "",
+    loanRate: "100%", // default
     studentName: "",
-    ceoName: "",
+    ceoName: "Dr John Machayi",
     date: "",
     agree: false,
   });
@@ -37,6 +40,12 @@ function AgreementForm() {
         studentName: user.fullName || "",
         studentNumber: user.studentID || "",
         studentLoanNo: user.loanNumber || "",
+        nrcNo: user.nrcNo || "",
+        program: user.program || "",
+        school: user.school || "",
+        qualification: user.qualification || "",
+        institution: user.institution || "",
+        year: user.year || "",
       }));
     }
   }, []);
@@ -59,7 +68,23 @@ function AgreementForm() {
     try {
       const res = await axios.post("http://localhost:5000/api/agreements", formData);
       alert(res.data.message);
-      // Reset form but keep pre-filled student details
+
+      // Save student to localStorage for uploads page
+      localStorage.setItem("student", JSON.stringify({
+        studentId: res.data.studentId, // backend should return saved student _id
+        studentNumber: formData.studentNumber,
+        fullName: formData.studentName,
+        year: formData.year,
+      }));
+
+      // Redirect based on year
+      if (formData.year === 1) {
+        navigate("/upload-first-timer");
+      } else {
+        navigate("/upload-returning");
+      }
+
+      // Reset form except prefilled
       setFormData((prev) => ({
         ...prev,
         receiptNumber: "",
@@ -70,175 +95,53 @@ function AgreementForm() {
         bankAccountNo: "",
         zraTpin: "",
         napsaNo: "",
-        program: "",
-        year: "",
-        institution: "",
-        qualification: "",
-        school: "",
-        loanRate: "",
-        ceoName: "",
+        loanRate: "10%",
         date: "",
         agree: false,
       }));
+
     } catch (err) {
       alert(err.response?.data?.message || "Server error. Please try again later.");
     }
   };
 
   return (
-    <div
-      className="agreement-page"
-      style={{ backgroundImage: `url(${capBackground})` }}
-    >
+    <div className="agreement-page" style={{ backgroundImage: `url(${capBackground})` }}>
       <div className="agreement-container">
         <h2>Student Loan Agreement Form (Undergraduate)</h2>
-
         <form onSubmit={handleSubmit} autoComplete="off">
           <div className="section grid-3">
-            <input
-              type="text"
-              name="receiptNumber"
-              placeholder="Receipt Number"
-              value={formData.receiptNumber}
-              onChange={handleChange}
-              required
-            />
-            <input
-              type="text"
-              name="bankName"
-              placeholder="Bank Name"
-              value={formData.bankName}
-              onChange={handleChange}
-              required
-            />
-            <input
-              type="text"
-              name="accountName"
-              placeholder="Account Name"
-              value={formData.accountName}
-              onChange={handleChange}
-              required
-            />
-            <input
-              type="text"
-              name="program"
-              placeholder="Programme of Study"
-              value={formData.program}
-              onChange={handleChange}
-            />
-            <input
-              type="text"
-              name="year"
-              placeholder="Current Year of Study"
-              value={formData.year}
-              onChange={handleChange}
-            />
-            <input
-              type="text"
-              name="studentNumber"
-              placeholder="University Student Identity No"
-              value={formData.studentNumber}
-              onChange={handleChange}
-              readOnly
-            />
-            <input
-              type="text"
-              name="branchName"
-              placeholder="Branch Name"
-              value={formData.branchName}
-              onChange={handleChange}
-            />
-            <input
-              type="text"
-              name="studentLoanNo"
-              placeholder="Student Loan No"
-              value={formData.studentLoanNo}
-              onChange={handleChange}
-              readOnly
-            />
-            <input
-              type="text"
-              name="nrcNo"
-              placeholder="NRC No"
-              value={formData.nrcNo}
-              onChange={handleChange}
-            />
-            <input
-              type="text"
-              name="bankAccountNo"
-              placeholder="Bank Account No"
-              value={formData.bankAccountNo}
-              onChange={handleChange}
-            />
-            <input
-              type="text"
-              name="zraTpin"
-              placeholder="ZRA TPIN"
-              value={formData.zraTpin}
-              onChange={handleChange}
-            />
-            <input
-              type="text"
-              name="napsaNo"
-              placeholder="NAPSA Social Security No"
-              value={formData.napsaNo}
-              onChange={handleChange}
-            />
+            <input type="text" name="receiptNumber" placeholder="Receipt Number" value={formData.receiptNumber} onChange={handleChange} required />
+            <input type="text" name="bankName" placeholder="Bank Name" value={formData.bankName} onChange={handleChange} required />
+            <input type="text" name="accountName" placeholder="Account Name" value={formData.accountName} onChange={handleChange} required />
+            <input type="text" name="program" placeholder="Programme of Study" value={formData.program} onChange={handleChange} readOnly />
+            <input type="text" name="year" placeholder="Current Year of Study" value={formData.year} onChange={handleChange} readOnly />
+            <input type="text" name="studentNumber" placeholder="University Student Identity No" value={formData.studentNumber} readOnly />
+            <input type="text" name="branchName" placeholder="Branch Name" value={formData.branchName} onChange={handleChange} />
+            <input type="text" name="studentLoanNo" placeholder="Student Loan No" value={formData.studentLoanNo} readOnly />
+            <input type="text" name="nrcNo" placeholder="NRC No" value={formData.nrcNo} readOnly />
+            <input type="text" name="bankAccountNo" placeholder="Bank Account No" value={formData.bankAccountNo} onChange={handleChange} />
+            <input type="text" name="zraTpin" placeholder="ZRA TPIN" value={formData.zraTpin} onChange={handleChange} />
+            <input type="text" name="napsaNo" placeholder="NAPSA Social Security No" value={formData.napsaNo} onChange={handleChange} />
           </div>
 
           <h3>STUDENT AGREEMENT</h3>
-          <div className="agreement-text">
+          <div className="agreement-text" style={{ maxHeight: "300px", overflowY: "scroll" }}>
             <p>
               An Agreement made and entered into by and between{" "}
-              <input
-                type="text"
-                name="ceoName"
-                placeholder="CEO Name"
-                value={formData.ceoName}
-                onChange={handleChange}
-              />{" "}
+              <input type="text" name="ceoName" placeholder="CEO Name" value={formData.ceoName} readOnly />{" "}
               in his/her capacity as Chief Executive Officer, HELSB, and{" "}
-              <input
-                type="text"
-                name="studentName"
-                placeholder="Student Name"
-                value={formData.studentName}
-                readOnly
-              />{" "}
+              <input type="text" name="studentName" placeholder="Student Name" value={formData.studentName} readOnly />{" "}
               for the purpose of providing a student loan at the rate of{" "}
-              <input
-                type="text"
-                name="loanRate"
-                placeholder="Loan Rate"
-                value={formData.loanRate}
-                onChange={handleChange}
-              />
+              <input type="text" name="loanRate" placeholder="Loan Rate" value={formData.loanRate} readOnly />.
             </p>
             <p>
               The student wishes to pursue a course of study at{" "}
-              <input
-                type="text"
-                name="institution"
-                placeholder="Institution Name"
-                value={formData.institution}
-                onChange={handleChange}
-              />{" "}
+              <input type="text" name="institution" placeholder="Institution Name" value={formData.institution} readOnly />{" "}
               for the qualification of{" "}
-              <input
-                type="text"
-                name="qualification"
-                placeholder="Qualification"
-                value={formData.qualification}
-                onChange={handleChange}
-              />{" "}
+              <input type="text" name="qualification" placeholder="Qualification" value={formData.qualification} readOnly />{" "}
               in the School of{" "}
-              <input
-                type="text"
-                name="school"
-                placeholder="School"
-                value={formData.school}
-                onChange={handleChange}
-              />.
+              <input type="text" name="school" placeholder="School" value={formData.school} readOnly />.
             </p>
             <p>
               NOW THEREFORE, the Sponsor commits to the student such a loan for
@@ -272,13 +175,7 @@ function AgreementForm() {
               </p>
             </div>
             <label className="checkbox-label">
-              <input
-                type="checkbox"
-                name="agree"
-                checked={formData.agree}
-                onChange={handleChange}
-                required
-              />
+              <input type="checkbox" name="agree" checked={formData.agree} onChange={handleChange} required />
               I have read and agree to the terms and conditions
             </label>
           </div>
@@ -286,13 +183,7 @@ function AgreementForm() {
           <div className="date-section">
             <label>
               Date:
-              <input
-                type="date"
-                name="date"
-                value={formData.date}
-                onChange={handleChange}
-                required
-              />
+              <input type="date" name="date" value={formData.date} onChange={handleChange} required />
             </label>
           </div>
 

@@ -1,116 +1,101 @@
 import React, { useState } from "react";
-import "./UploadDocuments.css";
-import capBg from "../assets/images/cap.jpg";
+import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 const UploadFirstTimer = () => {
-  const [files, setFiles] = useState({});
-  const [submitting, setSubmitting] = useState(false);
+  const navigate = useNavigate();
+
+  const [files, setFiles] = useState({
+    confirmationSlip: null,
+    paymentHistory: null,
+    results: null,
+    proofOfPayment: null,
+    nrc: null,
+    bankStatement: null,
+    grade12Results: null,
+    guardianNrc: null,
+    passportPhotos: null,
+  });
 
   const handleFileChange = (e) => {
-    setFiles({ ...files, [e.target.name]: e.target.files[0] });
+    const { name, files: selectedFiles } = e.target;
+    setFiles((prev) => ({ ...prev, [name]: selectedFiles[0] }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setSubmitting(true);
 
-    const formData = new FormData();
-    Object.entries(files).forEach(([key, file]) => {
-      if (file) formData.append(key, file);
-    });
-
-    formData.append("loanType", "first-timer");
-
-    // Bind to student if available
-    try {
-      const stored = localStorage.getItem("student");
-      if (stored) {
-        const s = JSON.parse(stored);
-        if (s.computerNumber) formData.append("computerNumber", s.computerNumber);
-        if (s._id) formData.append("studentId", s._id);
-      }
-    } catch (_) {}
-
-    try {
-      const response = await fetch("/api/upload/documents", {
-        method: "POST",
-        body: formData,
-      });
-
-      if (response.ok) {
-        const result = await response.json();
-        localStorage.setItem("renewalStatus", result.status);
-        alert("Documents uploaded successfully!");
-        window.location.replace("/student-dashboard");
-      } else {
-        alert("Upload failed. Please try again.");
-      }
-    } catch (err) {
-      console.error(err);
-      alert("An error occurred while uploading documents.");
+    const student = JSON.parse(localStorage.getItem("student"));
+    if (!student || !student.studentId) {
+      alert("Student info missing. Please log in again.");
+      return;
     }
 
-    setSubmitting(false);
+    const formData = new FormData();
+    formData.append("studentId", student.studentId); // critical for backend
+    // append files
+    Object.keys(files).forEach((key) => {
+      if (files[key]) formData.append(key, files[key]);
+    });
+
+    try {
+      const res = await axios.post(
+        "http://localhost:5000/api/upload/documents",
+        formData,
+        { headers: { "Content-Type": "multipart/form-data" } }
+      );
+      alert("Documents uploaded successfully!");
+
+      // Redirect to StudentProfile.jsx
+      navigate("/student-profile");
+    } catch (err) {
+      console.error(err);
+      alert(err.response?.data?.message || "Upload failed. Please try again.");
+    }
   };
 
   return (
-    <div
-      className="upload-page"
-      style={{ backgroundImage: `url(${capBg})` }}
-    >
-      <div className="upload-overlay">
-        <main className="upload-container">
-          <h2>Upload Documents</h2>
-          <p>Please upload all required documents carefully. All fields are required.</p>
-
-          <form onSubmit={handleSubmit}>
-            <div className="form-group">
-              <label>Grade 12 Results:</label>
-              <input type="file" name="grade12Results" accept=".pdf,image/*" onChange={handleFileChange} required />
-            </div>
-
-            <div className="form-group">
-              <label>Guardian NRC:</label>
-              <input type="file" name="guardianNrc" accept=".pdf,image/*" onChange={handleFileChange} required />
-            </div>
-
-            <div className="form-group">
-              <label>Passport Size Photos:</label>
-              <input type="file" name="passportPhotos" accept=".pdf,image/*" onChange={handleFileChange} required />
-            </div>
-
-            {/* Common documents */}
-            <div className="form-group">
-              <label>Confirmation Slip:</label>
-              <input type="file" name="confirmationSlip" accept=".pdf,image/*" onChange={handleFileChange} required />
-            </div>
-            <div className="form-group">
-              <label>Payment History:</label>
-              <input type="file" name="paymentHistory" accept=".pdf,image/*" onChange={handleFileChange} required />
-            </div>
-            <div className="form-group">
-              <label>Results:</label>
-              <input type="file" name="results" accept=".pdf,image/*" onChange={handleFileChange} required />
-            </div>
-            <div className="form-group">
-              <label>Proof of Payment / Receipt:</label>
-              <input type="file" name="proofOfPayment" accept=".pdf,image/*" onChange={handleFileChange} required />
-            </div>
-            <div className="form-group">
-              <label>NRC:</label>
-              <input type="file" name="nrc" accept=".pdf,image/*" onChange={handleFileChange} required />
-            </div>
-            <div className="form-group">
-              <label>Bank Statement:</label>
-              <input type="file" name="bankStatement" accept=".pdf,image/*" onChange={handleFileChange} required />
-            </div>
-
-            <button type="submit" disabled={submitting}>
-              {submitting ? "Uploading..." : "Upload Documents"}
-            </button>
-          </form>
-        </main>
-      </div>
+    <div className="upload-page">
+      <h2>Upload Documents</h2>
+      <form onSubmit={handleSubmit}>
+        <div>
+          <label>Confirmation Slip:</label>
+          <input type="file" name="confirmationSlip" onChange={handleFileChange} required />
+        </div>
+        <div>
+          <label>Payment History:</label>
+          <input type="file" name="paymentHistory" onChange={handleFileChange} required />
+        </div>
+        <div>
+          <label>Results:</label>
+          <input type="file" name="results" onChange={handleFileChange} required />
+        </div>
+        <div>
+          <label>Proof of Payment:</label>
+          <input type="file" name="proofOfPayment" onChange={handleFileChange} required />
+        </div>
+        <div>
+          <label>NRC:</label>
+          <input type="file" name="nrc" onChange={handleFileChange} required />
+        </div>
+        <div>
+          <label>Bank Statement:</label>
+          <input type="file" name="bankStatement" onChange={handleFileChange} required />
+        </div>
+        <div>
+          <label>Grade 12 Results:</label>
+          <input type="file" name="grade12Results" onChange={handleFileChange} required />
+        </div>
+        <div>
+          <label>Guardian NRC:</label>
+          <input type="file" name="guardianNrc" onChange={handleFileChange} required />
+        </div>
+        <div>
+          <label>Passport Photos:</label>
+          <input type="file" name="passportPhotos" onChange={handleFileChange} required />
+        </div>
+        <button type="submit">Upload Documents</button>
+      </form>
     </div>
   );
 };

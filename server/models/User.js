@@ -8,6 +8,11 @@ const userSchema = new mongoose.Schema({
   year: { type: Number }, // optional for staff
   studentID: { type: String }, // optional for staff
   loanNumber: { type: String }, // optional for staff
+  nrcNo: { type: String }, // optional for staff
+  program: { type: String }, // optional for staff
+  qualification: { type: String }, // optional for staff
+  school: { type: String }, // optional for staff
+  institution: { type: String }, // optional for staff
 });
 
 module.exports = mongoose.model("User", userSchema);
