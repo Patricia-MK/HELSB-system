@@ -1,0 +1,261 @@
+.studapp-root {
+  position: relative;
+  min-height: 100vh;
+}
+
+.studapp-root::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background-image: url("../assets/images/unza3.jpg");
+  background-size: cover;
+  background-position: center;
+  filter: blur(6px);
+  transform: scale(1.06);
+  z-index: 0;
+}
+
+.studapp-root::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+  z-index: 0;
+}
+
+.studapp-overlay {
+  backdrop-filter: blur(4px);
+  background: rgba(0, 0, 0, 0.35);
+}
+
+.studapp-card {
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 14px;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.25);
+  color: #fff;
+  position: relative;
+  z-index: 1;
+}
+
+.studapp-form-card {
+  background: #ffffff;
+  border-radius: 14px;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.25);
+  color: #0b1b2f;
+  position: relative;
+  z-index: 1;
+}
+
+.studapp-uni-card {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 160px;
+  border: 2px solid transparent;
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.25);
+  background-size: contain;        /* fit entire logo */
+  background-position: center;     /* center the logo */
+  background-repeat: no-repeat;    /* prevent tiling */
+  background-color: #ffffff;       /* white base behind transparent logos */
+  color: #fff;
+}
+.studapp-uni-card:hover {
+  border-color: #111827; /* neutral hover */
+  transform: translateY(-2px);
+  transition: transform 0.2s ease;
+}
+.studapp-uni-card.selected { border-color: #111827; }
+
+.studapp-uni-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(0,0,0,0.55), rgba(0,0,0,0.15));
+}
+
+.studapp-uni-card-title {
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  bottom: 10px;
+  z-index: 1;
+  font-weight: 600;
+}
+
+/* Unified input styling for forms */
+.studapp-input {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #cbd5e1; /* slate-300 */
+  border-radius: 8px;
+  background: #fff;
+}
+.studapp-input:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37,99,235,0.15);
+}
+.studapp-input[type="file"] {
+  padding: 6px 12px;
+}
+
+.studapp-card h2 {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.studapp-btn-primary {
+  background: #2563eb;
+  color: #fff;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.studapp-btn-primary:disabled {
+  opacity: 0.6;
+}
+
+/* Success (green) button variant */
+.studapp-btn-success {
+  background: #16a34a; /* green-600 */
+  color: #fff;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+.studapp-btn-success:disabled {
+  opacity: 0.6;
+}
+
+.studapp-sidebar { /* inner aside styling */
+  width: 260px;
+  background: #0d2b57;
+  color: #fff;
+  position: relative;
+  z-index: 1;
+  min-height: 100vh; /* cover full vertical space */
+  overflow-y: auto;
+}
+
+/* Wrapper controls slide responsiveness */
+.studapp-sidebar-wrap {
+  transition: transform 0.65s cubic-bezier(0.25, 0.8, 0.25, 1), width 0.65s cubic-bezier(0.25, 0.8, 0.25, 1);
+  will-change: transform, width;
+}
+
+/* Ensure same timing on both states */
+.studapp-sidebar-wrap.open,
+.studapp-sidebar-wrap.closed {
+  transition: transform 0.65s cubic-bezier(0.25, 0.8, 0.25, 1), width 0.65s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+/* Mobile / tablet: off-canvas */
+@media (max-width: 1023px) {
+  .studapp-sidebar-wrap {
+    position: fixed;
+    top: 60px; /* below topbar */
+    bottom: 0;
+    left: 0;
+    width: 260px;
+    z-index: 2;
+  }
+  /* leave a visible sliver (72px) when closed */
+  .studapp-sidebar-wrap.closed { transform: translateX(calc(-100% + 72px)); }
+  .studapp-sidebar-wrap.open { transform: translateX(0); }
+}
+
+/* Desktop: inline with collapsible width */
+@media (min-width: 1024px) {
+  .studapp-sidebar-wrap {
+    position: fixed;
+    top: 60px;
+    bottom: 0;
+    left: 0;
+    width: 260px;
+    transform: none;
+    z-index: 2;
+  }
+  .studapp-sidebar-wrap.open { width: 260px; }
+  /* keep a 72px sliver visible when collapsed */
+  .studapp-sidebar-wrap.closed { width: 72px; overflow: hidden; }
+
+  /* shift main content to avoid overlap with fixed sidebar */
+  .with-sidebar-open { margin-left: 260px; }
+  .with-sidebar-closed { margin-left: 72px; }
+}
+
+.studapp-topbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 3;
+  background: #113c74; /* deep blue like screenshot */
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+}
+
+.studapp-content {
+  padding-top: 60px; /* height of topbar */
+  transition: margin-left 0.65s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+/* Respect reduced motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  .studapp-sidebar-wrap,
+  .studapp-content {
+    transition: none;
+  }
+}
+
+.studapp-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 6px;
+  background: transparent;
+  color: #fff;
+}
+
+.studapp-screening-btn {
+  background: #2b2c97; /* purple/indigo pill */
+  color: #fff;
+  padding: 6px 12px;
+  border-radius: 10px;
+}
+
+.studapp-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.4);
+  z-index: 1;
+  opacity: 1;
+  transition: opacity 0.3s ease;
+}
+
+.studapp-sidebar a {
+  color: #e6eefc;
+}
+
+.studapp-sidebar a.active,
+.studapp-sidebar a:hover {
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.studapp-sidebar-footer {
+  position: sticky;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.18);
+  padding-top: 8px;
+}
+
+
