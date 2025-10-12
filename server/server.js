@@ -10,8 +10,8 @@ const authRoutes = require("./routes/auth");
 const agreementRoutes = require("./routes/agreementRoutes");
 const uploadRoutes = require("./routes/upload");
 const applicationRoutes = require("./routes/applicationRoutes");
-const officialRoutes = require("./routes/officialRoute");
-const adminRoutes = require("./routes/adminRoute");
+const officialRoutes = require("./routes/officialRoutes");
+const adminRoutes = require("./routes/adminRoutes");
 
 const app = express();
 
