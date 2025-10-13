@@ -19,7 +19,7 @@ const FloatingButtons = ({ activeTab, setActiveTab }) => {
       >
         Beneficiaries
       </button>
-      <button onClick={() => navigate("/login")}>Screening</button>
+      <button onClick={() => navigate("/login")}>Login</button>
     </div>
   );
 };

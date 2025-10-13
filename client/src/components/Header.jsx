@@ -12,9 +12,6 @@ const Header = ({ onContactClick }) => {
       <nav>
         <ul>
           <li>
-            <button className="nav-btn">Student Loans</button>
-          </li>
-          <li>
             <button className="nav-btn" onClick={onContactClick}>
               Contact Us
             </button>
