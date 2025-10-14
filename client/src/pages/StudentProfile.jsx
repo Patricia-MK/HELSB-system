@@ -1,265 +1,229 @@
-import React, { useState, useRef, useEffect } from "react";
-import {
-  UserGroupIcon,
-  CheckBadgeIcon,
-  DocumentIcon,
-  ChartBarIcon,
-} from "@heroicons/react/24/outline";
-import AdminSidebar from "../components/AdminSidebar";
-import UserTable from "../components/UserTable";
-import ApplicationTable from "../components/ApplicationTable";
-import {
-  BarChart,
-  Bar,
-  PieChart,
-  Pie,
-  Cell,
-  ResponsiveContainer,
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  Tooltip,
-  Legend,
-} from "recharts";
+import React, { useState, useEffect } from "react";
+import "./StudentProfile.css";
 
-const AdminDashboard = () => {
-  const [users, setUsers] = useState([
-    { _id: 1, name: "John Doe", email: "john@example.com", role: "Student", active: true },
-    { _id: 2, name: "Jane Smith", email: "jane@example.com", role: "Official", active: true },
-  ]);
+const StudentProfile = ({ closeProfile, onCloseRefresh }) => {
+  const [student, setStudent] = useState(null);
+  const [documents, setDocuments] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [loanInfo, setLoanInfo] = useState({
+    total: 0,
+    remaining: 0,
+    details: {},
+  });
 
-  const [applications] = useState([
-    { _id: 1, name: "Alice", nrc: "12345678", program: "Computer Science", loanNumber: "LN001", status: "Pending" },
-    { _id: 2, name: "Bob", nrc: "87654321", program: "Business Admin", loanNumber: "LN002", status: "Approved" },
-  ]);
-
-  const [newUser, setNewUser] = useState({ name: "", email: "", role: "Student" });
-
-  // Section refs
-  const dashboardRef = useRef(null);
-  const applicationsRef = useRef(null);
-  const usersRef = useRef(null);
-  const reportsRef = useRef(null);
-
-  const [activeSection, setActiveSection] = useState("dashboard");
-
-  const scrollToSection = {
-    dashboard: () => dashboardRef.current.scrollIntoView({ behavior: "smooth" }),
-    applications: () => applicationsRef.current.scrollIntoView({ behavior: "smooth" }),
-    users: () => usersRef.current.scrollIntoView({ behavior: "smooth" }),
-    reports: () => reportsRef.current.scrollIntoView({ behavior: "smooth" }),
-  };
-
-  // Intersection observer for active section
+  // Load student info from backend using email from localStorage
   useEffect(() => {
-    const sections = [
-      { ref: dashboardRef, name: "dashboard" },
-      { ref: applicationsRef, name: "applications" },
-      { ref: usersRef, name: "users" },
-      { ref: reportsRef, name: "reports" },
-    ];
+    const fetchStudentInfo = async () => {
+      setLoading(true);
+      try {
+        const storedUser = localStorage.getItem("student") || localStorage.getItem("user");
+        if (!storedUser) return;
 
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            const section = sections.find((s) => s.ref.current === entry.target);
-            if (section) setActiveSection(section.name);
-          }
-        });
-      },
-      { threshold: 0.6 }
-    );
+        const { email } = JSON.parse(storedUser);
+        if (!email) return;
 
-    sections.forEach((s) => s.ref.current && observer.observe(s.ref.current));
-    return () => sections.forEach((s) => s.ref.current && observer.unobserve(s.ref.current));
+        const res = await fetch(`http://localhost:5000/api/users/email/${email}`);
+        if (!res.ok) throw new Error("Failed to fetch student info");
+        const data = await res.json();
+
+        const s = {
+          fullName: data.fullName || "",
+          studentID: data.studentID || data.studentId || "",
+          loanNumber: data.loanNumber || "",
+          year: data.year || 1,
+          nrcNo: data.nrcNo || "",
+          school: data.school || "",
+          institution: data.institution || "University of Zambia",
+          program: data.program || "",
+          qualification: data.qualification || "",
+          _id: data._id || data.studentId || null,
+        };
+        setStudent(s);
+      } catch (err) {
+        console.error("Error loading student:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchStudentInfo();
   }, []);
 
-  // User handlers
-  const handleAddUser = (e) => {
-    e.preventDefault();
-    const user = { ...newUser, _id: Date.now(), active: true };
-    setUsers([...users, user]);
-    setNewUser({ name: "", email: "", role: "Student" });
+  // Fetch uploaded documents for this student
+  const fetchDocuments = async () => {
+    if (!student?._id) return;
+    try {
+      const res = await fetch(`http://localhost:5000/api/upload/${student._id}`);
+      if (!res.ok) {
+        setDocuments([]);
+        return;
+      }
+      const data = await res.json();
+      if (data && typeof data === "object") {
+        const docsArray = Object.entries(data).map(([name, url]) => ({
+          name,
+          url: url.startsWith("http") ? url : `http://localhost:5000${url}`,
+        }));
+        setDocuments(docsArray);
+      }
+    } catch (err) {
+      console.error("Error fetching documents:", err);
+    }
   };
 
-  const handleDeleteUser = (id) => {
-    setUsers(users.map((u) => (u._id === id ? { ...u, active: false } : u)));
-  };
+  // Fetch documents whenever student changes
+  useEffect(() => {
+    fetchDocuments();
+  }, [student]);
 
-  const handleEditUser = (user) => {
-    const updated = users.map((u) =>
-      u._id === user._id ? { ...u, role: user.role === "Student" ? "Official" : "Student" } : u
+  // Refresh documents if student uploads new ones
+  useEffect(() => {
+    const refresh = () => fetchDocuments();
+    window.addEventListener("profileRefresh", refresh);
+    return () => window.removeEventListener("profileRefresh", refresh);
+  }, [student]);
+
+  // Loan calculation (fixed rules)
+  const calculateLoan = () => {
+    if (!student) return;
+
+    let tuition = 25808; // default
+    const school = (student.school || "").toLowerCase();
+    if (
+      school.includes("engineering") ||
+      school.includes("natural") ||
+      school.includes("science") ||
+      school.includes("medicine") ||
+      school.includes("health")
+    ) tuition = 31878;
+
+    const accommodation = 3900;
+    const mealPerMonth = 750;
+
+    const screeningDate = new Date(localStorage.getItem("screeningDate") || new Date());
+    const today = new Date();
+    const monthsSinceScreening = Math.max(
+      0,
+      (today.getFullYear() - screeningDate.getFullYear()) * 12 +
+        (today.getMonth() - screeningDate.getMonth())
     );
-    setUsers(updated);
+    const mealTotal = Math.min(monthsSinceScreening, 12) * mealPerMonth;
+
+    const totalLoan = tuition + accommodation + mealTotal;
+    const details = {
+      tuition,
+      accommodation,
+      mealAllowance: mealTotal,
+      monthsCovered: Math.min(monthsSinceScreening, 12),
+    };
+
+    setLoanInfo({ total: totalLoan, remaining: totalLoan, details });
   };
 
-  // Chart data
-  const userStats = [
-    { name: "Students", value: users.filter(u => u.role === "Student").length },
-    { name: "Officials", value: users.filter(u => u.role === "Official").length },
-    { name: "Admins", value: users.filter(u => u.role === "Admin").length },
-  ];
+  useEffect(() => {
+    calculateLoan();
+  }, [student]);
 
-  const applicationStats = applications.map(a => ({ name: a.status, value: 1 }));
+  const handleClose = () => {
+    if (onCloseRefresh) onCloseRefresh();
+    closeProfile();
+  };
 
-  const recentActivity = [
-    { day: "Mon", activity: 2 },
-    { day: "Tue", activity: 5 },
-    { day: "Wed", activity: 3 },
-    { day: "Thu", activity: 4 },
-    { day: "Fri", activity: 6 },
-    { day: "Sat", activity: 1 },
-    { day: "Sun", activity: 0 },
-  ];
-
-  const COLORS = ["#28a745", "#f0ad4e", "#dc3545"];
+  const statusColor = "#f0ad4e";
 
   return (
-    <div className="flex h-screen">
-      {/* Sidebar */}
-      <AdminSidebar scrollToSection={scrollToSection} activeSection={activeSection} />
+    <div className="profile-overlay" role="dialog" aria-modal="true">
+      <div className="profile-container" aria-live="polite">
+        <button className="close-btn" onClick={handleClose} aria-label="Close profile">
+          X
+        </button>
 
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col overflow-y-auto bg-gray-50">
-        {/* Header */}
-        <header className="bg-white p-6 shadow sticky top-0 z-10">
-          <h1 className="text-2xl font-bold">HELSB Admin Dashboard</h1>
-        </header>
+        <div className="profile-header">
+          <h2>Student Profile</h2>
+          <div className="status-wrapper">
+            <span className="status-label">Status:</span>
+            <span className="status-badge" style={{ backgroundColor: statusColor }}>
+              Pending
+            </span>
+          </div>
+        </div>
 
-        {/* Main sections */}
-        <main className="p-6 space-y-12">
-          {/* Dashboard Summary */}
-          <section ref={dashboardRef}>
-            <h2 className="text-3xl font-bold mb-6 border-b-2 border-blue-300 pb-2">Dashboard</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              <div className="bg-green-100 text-green-800 p-4 rounded-lg shadow flex items-center">
-                <UserGroupIcon className="w-8 h-8 mr-3" />
-                <div>
-                  <p className="text-sm font-medium">Total Students</p>
-                  <p className="text-xl font-bold">{users.filter(u => u.role === "Student").length}</p>
+        <div className="tabs">
+          <input type="radio" name="tab" id="detailsTab" defaultChecked />
+          <label htmlFor="detailsTab">Details</label>
+
+          <input type="radio" name="tab" id="documentsTab" />
+          <label htmlFor="documentsTab">Documents</label>
+
+          <input type="radio" name="tab" id="loanTab" />
+          <label htmlFor="loanTab">Loan</label>
+
+          {/* Details Tab */}
+          <div className="tab-content details-content">
+            {loading || !student ? (
+              <p>Loading profile...</p>
+            ) : (
+              <>
+                <p><strong>Full Name:</strong> {student.fullName}</p>
+                <p><strong>Email:</strong> {JSON.parse(localStorage.getItem("student") || localStorage.getItem("user"))?.email || "N/A"}</p>
+                <p><strong>University:</strong> {student.institution}</p>
+                <p><strong>Program:</strong> {student.program}</p>
+                <p><strong>Year:</strong> {student.year}</p>
+                <p><strong>Student Number:</strong> {student.studentID}</p>
+                <p><strong>NRC:</strong> {student.nrcNo}</p>
+                <p><strong>Loan Number:</strong> {student.loanNumber}</p>
+                <p><strong>Qualification:</strong> {student.qualification}</p>
+                <p><strong>School:</strong> {student.school}</p>
+              </>
+            )}
+          </div>
+
+          {/* Documents Tab */}
+          <div className="tab-content documents-content">
+            {loading ? (
+              <p>Loading documents...</p>
+            ) : documents.length === 0 ? (
+              <p>No documents uploaded yet.</p>
+            ) : (
+              documents.map((doc, idx) => (
+                <div key={idx} className="document-item">
+                  <span style={{ textTransform: "capitalize" }}>
+                    {doc.name.replace(/([A-Z])/g, " $1")}
+                  </span>
+                  <a href={doc.url} target="_blank" rel="noopener noreferrer">
+                    View
+                  </a>
                 </div>
-              </div>
-              <div className="bg-blue-100 text-blue-800 p-4 rounded-lg shadow flex items-center">
-                <CheckBadgeIcon className="w-8 h-8 mr-3" />
-                <div>
-                  <p className="text-sm font-medium">Total Officials</p>
-                  <p className="text-xl font-bold">{users.filter(u => u.role === "Official").length}</p>
-                </div>
-              </div>
-              <div className="bg-yellow-100 text-yellow-800 p-4 rounded-lg shadow flex items-center">
-                <DocumentIcon className="w-8 h-8 mr-3" />
-                <div>
-                  <p className="text-sm font-medium">Total Applications</p>
-                  <p className="text-xl font-bold">{applications.length}</p>
-                </div>
-              </div>
-              <div className="bg-purple-100 text-purple-800 p-4 rounded-lg shadow flex items-center">
-                <ChartBarIcon className="w-8 h-8 mr-3" />
-                <div>
-                  <p className="text-sm font-medium">Recent Activity</p>
-                  <p className="text-xl font-bold">—</p>
-                </div>
-              </div>
+              ))
+            )}
+          </div>
+
+          {/* Loan Tab */}
+          <div className="tab-content loan-content">
+            <p><strong>Tuition Fee:</strong> K{loanInfo.details.tuition?.toLocaleString()}</p>
+            <p><strong>Accommodation:</strong> K{loanInfo.details.accommodation?.toLocaleString()}</p>
+            <p>
+              <strong>Meal Allowance:</strong> K{loanInfo.details.mealAllowance?.toLocaleString()} (
+              {loanInfo.details.monthsCovered} months)
+            </p>
+            <hr />
+            <p><strong>Total Loan for the Year:</strong> K{loanInfo.total.toLocaleString()}</p>
+            <p><strong>Remaining Balance:</strong> K{loanInfo.remaining.toLocaleString()}</p>
+            <div className="loan-bar-container" aria-hidden>
+              <div
+                className="loan-bar"
+                style={{
+                  width: `${Math.min((loanInfo.remaining / loanInfo.total) * 100, 100)}%`,
+                  background: "#28a745",
+                }}
+              ></div>
             </div>
-          </section>
-
-          {/* Applications */}
-          <section ref={applicationsRef}>
-            <h3 className="text-2xl font-bold mb-4 border-b border-blue-300 pb-2">Applications</h3>
-            <ApplicationTable applications={applications} onViewClick={() => {}} />
-          </section>
-
-          {/* Users */}
-          <section ref={usersRef}>
-            <h3 className="text-2xl font-bold mb-4 border-b border-blue-300 pb-2">Users Management</h3>
-            <form onSubmit={handleAddUser} className="mb-4 flex flex-wrap gap-2">
-              <input
-                type="text"
-                placeholder="Name"
-                value={newUser.name}
-                onChange={(e) => setNewUser({ ...newUser, name: e.target.value })}
-                className="border px-2 py-1 rounded"
-              />
-              <input
-                type="email"
-                placeholder="Email"
-                value={newUser.email}
-                onChange={(e) => setNewUser({ ...newUser, email: e.target.value })}
-                className="border px-2 py-1 rounded"
-              />
-              <select
-                value={newUser.role}
-                onChange={(e) => setNewUser({ ...newUser, role: e.target.value })}
-                className="border px-2 py-1 rounded"
-              >
-                <option value="Student">Student</option>
-                <option value="Official">Official</option>
-                <option value="Admin">Admin</option>
-              </select>
-              <button type="submit" className="bg-green-500 text-white px-4 py-1 rounded">Add User</button>
-            </form>
-            <UserTable users={users} onEdit={handleEditUser} onDelete={handleDeleteUser} />
-          </section>
-
-          {/* Reports */}
-          <section ref={reportsRef}>
-            <h3 className="text-2xl font-bold mb-4 border-b border-blue-300 pb-2">Reports</h3>
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              {/* User Pie Chart */}
-              <div className="bg-white p-4 rounded-lg shadow h-64">
-                <h4 className="text-lg font-semibold mb-2">Users by Role</h4>
-                <ResponsiveContainer width="100%" height="90%">
-                  <PieChart>
-                    <Pie
-                      data={userStats}
-                      dataKey="value"
-                      nameKey="name"
-                      outerRadius={60}
-                      fill="#8884d8"
-                      label
-                    >
-                      {userStats.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                      ))}
-                    </Pie>
-                    <Tooltip />
-                  </PieChart>
-                </ResponsiveContainer>
-              </div>
-
-              {/* Applications Bar Chart */}
-              <div className="bg-white p-4 rounded-lg shadow h-64">
-                <h4 className="text-lg font-semibold mb-2">Applications Status</h4>
-                <ResponsiveContainer width="100%" height="90%">
-                  <BarChart data={applicationStats}>
-                    <XAxis dataKey="name" />
-                    <YAxis />
-                    <Tooltip />
-                    <Bar dataKey="value" fill="#8884d8" />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-
-              {/* Recent Activity Line Chart */}
-              <div className="bg-white p-4 rounded-lg shadow h-64">
-                <h4 className="text-lg font-semibold mb-2">Recent Activity</h4>
-                <ResponsiveContainer width="100%" height="90%">
-                  <LineChart data={recentActivity}>
-                    <XAxis dataKey="day" />
-                    <YAxis />
-                    <Tooltip />
-                    <Line type="monotone" dataKey="activity" stroke="#8884d8" strokeWidth={2} />
-                  </LineChart>
-                </ResponsiveContainer>
-              </div>
-            </div>
-          </section>
-        </main>
+            <p>Loan repayment progress</p>
+          </div>
+        </div>
       </div>
     </div>
   );
 };
 
-export default AdminDashboard;
+export default StudentProfile;

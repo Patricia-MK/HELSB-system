@@ -25,8 +25,8 @@ const InfoSection = ({ activeTab }) => {
         <h2>{currentInfo.title}</h2>
         <p>{currentInfo.text}</p>
       </div>
-      <div className="info-img">
-        <img src={currentInfo.img} alt="" />
+      <div className="info-image">
+        <img src={currentInfo.img} alt="Graduation" />
       </div>
     </div>
   );

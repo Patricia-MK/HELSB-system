@@ -19,30 +19,26 @@ const UploadReturning = () => {
       if (file) formData.append(key, file);
     });
 
-    // Bind to student if available
     try {
-      const stored = localStorage.getItem("student");
+      const stored = localStorage.getItem("user");
       if (stored) {
         const s = JSON.parse(stored);
-        if (s.computerNumber) formData.append("computerNumber", s.computerNumber);
         if (s._id) formData.append("studentId", s._id);
       }
+      formData.append("loanType", "returning");
     } catch (_) {}
 
     try {
-      const response = await fetch("/api/upload/documents", {
+      const response = await fetch("http://localhost:5000/api/upload/documents", {
         method: "POST",
         body: formData,
       });
-
+      const data = await response.json();
       if (response.ok) {
-        const result = await response.json();
-        localStorage.setItem("renewalStatus", result.status);
-        alert("Documents uploaded successfully!");
+        alert("✅ Documents uploaded successfully!");
         window.location.replace("/student-dashboard");
       } else {
-        const errData = await response.json();
-        alert(errData.message || "Upload failed. Please try again.");
+        alert(`❌ Upload failed: ${data.message}`);
       }
     } catch (err) {
       console.error(err);
@@ -53,44 +49,25 @@ const UploadReturning = () => {
   };
 
   return (
-    <div
-      className="upload-page"
-      style={{ backgroundImage: `url(${capBg})` }}
-    >
+    <div className="upload-page" style={{ backgroundImage: `url(${capBg})` }}>
       <div className="upload-overlay">
-        <main className="upload-container">
-          <h2>Upload Documents</h2>
-          <p>Please upload all required documents carefully. All fields are required.</p>
-
-          <form onSubmit={handleSubmit}>
-            <div className="form-group">
-              <label>Confirmation Slip:</label>
-              <input type="file" name="confirmationSlip" accept=".pdf,image/*" onChange={handleFileChange} required />
-            </div>
-            <div className="form-group">
-              <label>Payment History:</label>
-              <input type="file" name="paymentHistory" accept=".pdf,image/*" onChange={handleFileChange} required />
-            </div>
-            <div className="form-group">
-              <label>Results:</label>
-              <input type="file" name="results" accept=".pdf,image/*" onChange={handleFileChange} required />
-            </div>
-            <div className="form-group">
-              <label>Proof of Payment / Receipt:</label>
-              <input type="file" name="proofOfPayment" accept=".pdf,image/*" onChange={handleFileChange} required />
-            </div>
-            <div className="form-group">
-              <label>NRC:</label>
-              <input type="file" name="nrc" accept=".pdf,image/*" onChange={handleFileChange} required />
-            </div>
-            <div className="form-group">
-              <label>Bank Statement:</label>
-              <input type="file" name="bankStatement" accept=".pdf,image/*" onChange={handleFileChange} required />
-            </div>
-
-            <button type="submit" disabled={submitting}>
-              {submitting ? "Uploading..." : "Upload Documents"}
-            </button>
+        <main className="upload-container modern-upload">
+          <h2>📁 Returning Student Upload</h2>
+          <p>Upload all the required documents below (PDF or image only)</p>
+          <form onSubmit={handleSubmit} className="upload-form-grid">
+            <label>📄 Confirmation Slip:</label>
+            <input type="file" name="confirmationSlip" accept=".pdf,image/*" onChange={handleFileChange} required />
+            <label>💳 Payment History:</label>
+            <input type="file" name="paymentHistory" accept=".pdf,image/*" onChange={handleFileChange} required />
+            <label>📘 Results:</label>
+            <input type="file" name="results" accept=".pdf,image/*" onChange={handleFileChange} required />
+            <label>🧾 Proof of Payment:</label>
+            <input type="file" name="proofOfPayment" accept=".pdf,image/*" onChange={handleFileChange} required />
+            <label>🪪 NRC:</label>
+            <input type="file" name="nrc" accept=".pdf,image/*" onChange={handleFileChange} required />
+            <label>🏦 Bank Statement:</label>
+            <input type="file" name="bankStatement" accept=".pdf,image/*" onChange={handleFileChange} required />
+            <button type="submit" disabled={submitting}>{submitting ? "Uploading..." : "Submit Documents"}</button>
           </form>
         </main>
       </div>
