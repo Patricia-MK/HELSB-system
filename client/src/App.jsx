@@ -10,20 +10,21 @@ import AgreementForm from "./pages/AgreementForm";
 import UploadFirstTimer from "./pages/UploadFirstTimer";
 import UploadReturning from "./pages/UploadReturning";
 import StudappDashboard from "./pages/studapp-dashboard";
+
 function App() {
   return (
     <Routes>
       <Route path="/" element={<HomePage />} />
       <Route path="/contact" element={<ContactUs />} />
+      <Route path="/login" element={<LoginPage />} />
       <Route path="/student-dashboard" element={<StudentDashboard />} />
       <Route path="/studapp-dashboard" element={<StudappDashboard />} />
-      <Route path="/login" element={<LoginPage />} />
       <Route path="/official-dashboard" element={<OfficialDashboard />} />
       <Route path="/admin-dashboard" element={<AdminDashboard />} />
       <Route path="/agreement-form" element={<AgreementForm />} />
       <Route path="/upload-first-timer" element={<UploadFirstTimer />} />
       <Route path="/upload-returning" element={<UploadReturning />} />
-
+     
     </Routes>
   );
 }

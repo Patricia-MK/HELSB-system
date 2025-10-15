@@ -5,69 +5,175 @@ import capBg from "../assets/images/cap.jpg";
 const UploadReturning = () => {
   const [files, setFiles] = useState({});
   const [submitting, setSubmitting] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState({});
 
   const handleFileChange = (e) => {
-    setFiles({ ...files, [e.target.name]: e.target.files[0] });
+    const { name, files: fileList } = e.target;
+    if (fileList && fileList[0]) {
+      setFiles({ ...files, [name]: fileList[0] });
+      setUploadProgress(prev => ({ ...prev, [name]: 'ready' }));
+    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSubmitting(true);
 
+    // Validate that we have at least one file
+    if (Object.keys(files).length === 0) {
+      alert("❌ Please select at least one document to upload.");
+      setSubmitting(false);
+      return;
+    }
+
     const formData = new FormData();
     Object.entries(files).forEach(([key, file]) => {
-      if (file) formData.append(key, file);
+      if (file) {
+        formData.append(key, file);
+        setUploadProgress(prev => ({ ...prev, [key]: 'uploading' }));
+      }
     });
 
+    // Get student ID from localStorage
     try {
       const stored = localStorage.getItem("user");
       if (stored) {
-        const s = JSON.parse(stored);
-        if (s._id) formData.append("studentId", s._id);
+        const userData = JSON.parse(stored);
+        if (userData._id) {
+          formData.append("studentId", userData._id);
+          console.log("Using student ID:", userData._id);
+        } else {
+          throw new Error("No student ID found in user data");
+        }
+      } else {
+        throw new Error("No user data found in localStorage");
       }
       formData.append("loanType", "returning");
-    } catch (_) {}
+    } catch (error) {
+      console.error("Error preparing form data:", error);
+      alert(`❌ Error: ${error.message}. Please log in again.`);
+      setSubmitting(false);
+      return;
+    }
 
     try {
+      console.log("Starting upload...");
       const response = await fetch("http://localhost:5000/api/upload/documents", {
         method: "POST",
         body: formData,
       });
-      const data = await response.json();
-      if (response.ok) {
-        alert("✅ Documents uploaded successfully!");
-        window.location.replace("/student-dashboard");
-      } else {
-        alert(`❌ Upload failed: ${data.message}`);
-      }
-    } catch (err) {
-      console.error(err);
-      alert("An error occurred while uploading documents.");
-    }
 
-    setSubmitting(false);
+      console.log("Response status:", response.status);
+      
+      let data;
+      try {
+        data = await response.json();
+      } catch (jsonError) {
+        console.error("JSON parse error:", jsonError);
+        throw new Error("Server returned invalid response. Please try again.");
+      }
+      
+      if (!response.ok) {
+        throw new Error(data.message || `Upload failed with status ${response.status}`);
+      }
+
+      if (data.status === "success") {
+        // Update all progress to completed
+        Object.keys(files).forEach(key => {
+          setUploadProgress(prev => ({ ...prev, [key]: 'completed' }));
+        });
+        
+        setTimeout(() => {
+          alert("🎉 " + data.message);
+          // Trigger profile refresh
+          window.dispatchEvent(new Event('profileRefresh'));
+          window.location.href = "/student-dashboard";
+        }, 1000);
+      } else {
+        throw new Error(data.message || "Upload failed");
+      }
+
+    } catch (err) {
+      console.error("Upload error:", err);
+      alert(`❌ Upload failed: ${err.message}`);
+      // Reset progress on error
+      Object.keys(files).forEach(key => {
+        setUploadProgress(prev => ({ ...prev, [key]: 'error' }));
+      });
+      setSubmitting(false);
+    }
+  };
+
+  const documentRequirements = [
+    { name: "confirmationSlip", label: "📄 Confirmation Slip", required: true },
+    { name: "paymentHistory", label: "💳 Payment History", required: true },
+    { name: "results", label: "📘 Academic Results", required: true },
+    { name: "proofOfPayment", label: "🧾 Proof of Payment", required: true },
+    { name: "nrc", label: "🪪 Your NRC", required: true },
+    { name: "bankStatement", label: "🏦 Bank Statement", required: true }
+  ];
+
+  const getStatusIcon = (status) => {
+    switch (status) {
+      case 'completed': return '✅';
+      case 'uploading': return '⏳';
+      case 'ready': return '📁';
+      case 'error': return '❌';
+      default: return '📄';
+    }
   };
 
   return (
     <div className="upload-page" style={{ backgroundImage: `url(${capBg})` }}>
       <div className="upload-overlay">
         <main className="upload-container modern-upload">
-          <h2>📁 Returning Student Upload</h2>
-          <p>Upload all the required documents below (PDF or image only)</p>
+          <div className="upload-header">
+            <h2>🎓 Returning Student Screening</h2>
+            <p>Upload your documents to continue receiving loan support</p>
+          </div>
+
           <form onSubmit={handleSubmit} className="upload-form-grid">
-            <label>📄 Confirmation Slip:</label>
-            <input type="file" name="confirmationSlip" accept=".pdf,image/*" onChange={handleFileChange} required />
-            <label>💳 Payment History:</label>
-            <input type="file" name="paymentHistory" accept=".pdf,image/*" onChange={handleFileChange} required />
-            <label>📘 Results:</label>
-            <input type="file" name="results" accept=".pdf,image/*" onChange={handleFileChange} required />
-            <label>🧾 Proof of Payment:</label>
-            <input type="file" name="proofOfPayment" accept=".pdf,image/*" onChange={handleFileChange} required />
-            <label>🪪 NRC:</label>
-            <input type="file" name="nrc" accept=".pdf,image/*" onChange={handleFileChange} required />
-            <label>🏦 Bank Statement:</label>
-            <input type="file" name="bankStatement" accept=".pdf,image/*" onChange={handleFileChange} required />
-            <button type="submit" disabled={submitting}>{submitting ? "Uploading..." : "Submit Documents"}</button>
+            <div className="documents-grid">
+              {documentRequirements.map((doc, index) => (
+                <div key={doc.name} className="document-card" style={{animationDelay: `${index * 0.1}s`}}>
+                  <div className="document-header">
+                    <span className="doc-icon">{getStatusIcon(uploadProgress[doc.name])}</span>
+                    <label className="doc-label">{doc.label}</label>
+                    {doc.required && <span className="required-badge">Required</span>}
+                  </div>
+                  <input 
+                    type="file" 
+                    name={doc.name} 
+                    accept=".pdf,.jpg,.jpeg,.png" 
+                    onChange={handleFileChange} 
+                    required={doc.required}
+                    className="file-input"
+                  />
+                  {files[doc.name] && (
+                    <div className="file-info">
+                      <span className="file-name">{files[doc.name].name}</span>
+                      <span className="file-size">({(files[doc.name].size / 1024 / 1024).toFixed(2)} MB)</span>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+
+            <div className="upload-actions">
+              <button type="submit" disabled={submitting} className="submit-btn">
+                {submitting ? (
+                  <>
+                    <span className="spinner"></span>
+                    Uploading Documents...
+                  </>
+                ) : (
+                  "🚀 Submit All Documents"
+                )}
+              </button>
+              <p className="upload-note">
+                📝 Your documents will be verified for continued loan eligibility
+              </p>
+            </div>
           </form>
         </main>
       </div>

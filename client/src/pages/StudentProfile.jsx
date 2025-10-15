@@ -6,219 +6,285 @@ const StudentProfile = ({ closeProfile, onCloseRefresh }) => {
   const [documents, setDocuments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [loanInfo, setLoanInfo] = useState({
-    total: 0,
-    remaining: 0,
-    details: {},
+    outstandingBalance: 0,
+    currentYearAllocation: {
+      tuition: 0,
+      accommodation: 0,
+      mealAllowance: 0,
+      total: 0
+    }
   });
 
-  // Load student info from backend using email from localStorage
+  // Load student info from localStorage
   useEffect(() => {
-    const fetchStudentInfo = async () => {
+    const loadStudentData = () => {
       setLoading(true);
+      console.log("🔍 Loading student data from localStorage...");
+      
       try {
-        const storedUser = localStorage.getItem("student") || localStorage.getItem("user");
-        if (!storedUser) return;
-
-        const { email } = JSON.parse(storedUser);
-        if (!email) return;
-
-        const res = await fetch(`http://localhost:5000/api/users/email/${email}`);
-        if (!res.ok) throw new Error("Failed to fetch student info");
-        const data = await res.json();
-
-        const s = {
-          fullName: data.fullName || "",
-          studentID: data.studentID || data.studentId || "",
-          loanNumber: data.loanNumber || "",
-          year: data.year || 1,
-          nrcNo: data.nrcNo || "",
-          school: data.school || "",
-          institution: data.institution || "University of Zambia",
-          program: data.program || "",
-          qualification: data.qualification || "",
-          _id: data._id || data.studentId || null,
-        };
-        setStudent(s);
-      } catch (err) {
-        console.error("Error loading student:", err);
-      } finally {
+        const storedUser = localStorage.getItem("user");
+        
+        if (storedUser) {
+          const userData = JSON.parse(storedUser);
+          console.log("✅ User data found:", userData);
+          
+          if (userData && userData.email) {
+            setStudent(userData);
+            calculateLoanInfo(userData);
+            
+            // Fetch documents if student has ID
+            if (userData._id) {
+              fetchDocuments(userData._id);
+            } else {
+              setLoading(false);
+            }
+            return;
+          }
+        }
+        
+        // If no user data found
+        console.log("❌ No valid user data found in localStorage");
+        setStudent(null);
+        setLoading(false);
+        
+      } catch (error) {
+        console.error("Error loading student data:", error);
+        setStudent(null);
         setLoading(false);
       }
     };
 
-    fetchStudentInfo();
+    loadStudentData();
   }, []);
 
-  // Fetch uploaded documents for this student
-  const fetchDocuments = async () => {
-    if (!student?._id) return;
-    try {
-      const res = await fetch(`http://localhost:5000/api/upload/${student._id}`);
-      if (!res.ok) {
-        setDocuments([]);
-        return;
+  // Calculate loan information
+  const calculateLoanInfo = (studentData) => {
+    if (!studentData) return;
+
+    const year = studentData.year || 1;
+    
+    // Base amounts per year (HELSB rates)
+    const tuitionPerYear = 25808;
+    const accommodationPerYear = 3900;
+    const mealAllowancePerYear = 9000; // 750 * 12 months
+    
+    const totalPerYear = tuitionPerYear + accommodationPerYear + mealAllowancePerYear;
+    
+    // Calculate outstanding balance based on years completed
+    const outstandingBalance = totalPerYear * year;
+
+    const loanInfo = {
+      outstandingBalance,
+      currentYearAllocation: {
+        tuition: tuitionPerYear,
+        accommodation: accommodationPerYear,
+        mealAllowance: mealAllowancePerYear,
+        total: totalPerYear
       }
-      const data = await res.json();
-      if (data && typeof data === "object") {
-        const docsArray = Object.entries(data).map(([name, url]) => ({
-          name,
-          url: url.startsWith("http") ? url : `http://localhost:5000${url}`,
-        }));
-        setDocuments(docsArray);
-      }
-    } catch (err) {
-      console.error("Error fetching documents:", err);
-    }
-  };
-
-  // Fetch documents whenever student changes
-  useEffect(() => {
-    fetchDocuments();
-  }, [student]);
-
-  // Refresh documents if student uploads new ones
-  useEffect(() => {
-    const refresh = () => fetchDocuments();
-    window.addEventListener("profileRefresh", refresh);
-    return () => window.removeEventListener("profileRefresh", refresh);
-  }, [student]);
-
-  // Loan calculation (fixed rules)
-  const calculateLoan = () => {
-    if (!student) return;
-
-    let tuition = 25808; // default
-    const school = (student.school || "").toLowerCase();
-    if (
-      school.includes("engineering") ||
-      school.includes("natural") ||
-      school.includes("science") ||
-      school.includes("medicine") ||
-      school.includes("health")
-    ) tuition = 31878;
-
-    const accommodation = 3900;
-    const mealPerMonth = 750;
-
-    const screeningDate = new Date(localStorage.getItem("screeningDate") || new Date());
-    const today = new Date();
-    const monthsSinceScreening = Math.max(
-      0,
-      (today.getFullYear() - screeningDate.getFullYear()) * 12 +
-        (today.getMonth() - screeningDate.getMonth())
-    );
-    const mealTotal = Math.min(monthsSinceScreening, 12) * mealPerMonth;
-
-    const totalLoan = tuition + accommodation + mealTotal;
-    const details = {
-      tuition,
-      accommodation,
-      mealAllowance: mealTotal,
-      monthsCovered: Math.min(monthsSinceScreening, 12),
     };
 
-    setLoanInfo({ total: totalLoan, remaining: totalLoan, details });
+    console.log("💰 Calculated loan info:", loanInfo);
+    setLoanInfo(loanInfo);
   };
 
-  useEffect(() => {
-    calculateLoan();
-  }, [student]);
+  // Fetch uploaded documents
+  const fetchDocuments = async (studentId) => {
+    try {
+      console.log("📁 Fetching documents for student:", studentId);
+      const res = await fetch(`http://localhost:5000/api/student/documents/${studentId}`);
+      
+      if (res.ok) {
+        const data = await res.json();
+        console.log("✅ Documents received:", data.documents);
+        setDocuments(data.documents || []);
+      } else {
+        console.log("📭 No documents found");
+        setDocuments([]);
+      }
+    } catch (err) {
+      console.error("❌ Error fetching documents:", err);
+      setDocuments([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleClose = () => {
     if (onCloseRefresh) onCloseRefresh();
     closeProfile();
   };
 
-  const statusColor = "#f0ad4e";
+  const getStatus = () => {
+    if (documents.length > 0) return { text: "Screening Completed", color: "#28a745" };
+    if (student) return { text: "Ready for Screening", color: "#f39c12" };
+    return { text: "Not Started", color: "#e74c3c" };
+  };
+
+  const status = getStatus();
+
+  if (loading) {
+    return (
+      <div className="profile-overlay">
+        <div className="profile-container">
+          <div className="loading-state">
+            <div className="spinner"></div>
+            Loading your profile...
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="profile-overlay" role="dialog" aria-modal="true">
-      <div className="profile-container" aria-live="polite">
-        <button className="close-btn" onClick={handleClose} aria-label="Close profile">
-          X
-        </button>
+    <div className="profile-overlay">
+      <div className="profile-container">
+        <button className="close-btn" onClick={handleClose}>×</button>
 
         <div className="profile-header">
           <h2>Student Profile</h2>
           <div className="status-wrapper">
             <span className="status-label">Status:</span>
-            <span className="status-badge" style={{ backgroundColor: statusColor }}>
-              Pending
+            <span className="status-badge" style={{ backgroundColor: status.color }}>
+              {status.text}
             </span>
           </div>
         </div>
 
         <div className="tabs">
           <input type="radio" name="tab" id="detailsTab" defaultChecked />
-          <label htmlFor="detailsTab">Details</label>
+          <label htmlFor="detailsTab">Student Details</label>
 
           <input type="radio" name="tab" id="documentsTab" />
           <label htmlFor="documentsTab">Documents</label>
 
           <input type="radio" name="tab" id="loanTab" />
-          <label htmlFor="loanTab">Loan</label>
+          <label htmlFor="loanTab">Loan Information</label>
 
           {/* Details Tab */}
           <div className="tab-content details-content">
-            {loading || !student ? (
-              <p>Loading profile...</p>
+            {student ? (
+              <div className="student-details">
+                <div className="detail-section">
+                  <h4>Personal Information</h4>
+                  <div className="detail-item">
+                    <strong>Full Name:</strong> {student.fullName}
+                  </div>
+                  <div className="detail-item">
+                    <strong>Email:</strong> {student.email}
+                  </div>
+                  <div className="detail-item">
+                    <strong>NRC:</strong> {student.nrcNo}
+                  </div>
+                </div>
+
+                <div className="detail-section">
+                  <h4>Academic Information</h4>
+                  <div className="detail-item">
+                    <strong>University:</strong> {student.institution}
+                  </div>
+                  <div className="detail-item">
+                    <strong>Program:</strong> {student.program}
+                  </div>
+                  <div className="detail-item">
+                    <strong>Year:</strong> {student.year}
+                  </div>
+                  <div className="detail-item">
+                    <strong>Qualification:</strong> {student.qualification}
+                  </div>
+                  <div className="detail-item">
+                    <strong>School:</strong> {student.school}
+                  </div>
+                </div>
+
+                <div className="detail-section">
+                  <h4>Loan Information</h4>
+                  <div className="detail-item">
+                    <strong>Student Number:</strong> {student.studentID}
+                  </div>
+                  <div className="detail-item">
+                    <strong>Loan Number:</strong> {student.loanNumber}
+                  </div>
+                </div>
+              </div>
             ) : (
-              <>
-                <p><strong>Full Name:</strong> {student.fullName}</p>
-                <p><strong>Email:</strong> {JSON.parse(localStorage.getItem("student") || localStorage.getItem("user"))?.email || "N/A"}</p>
-                <p><strong>University:</strong> {student.institution}</p>
-                <p><strong>Program:</strong> {student.program}</p>
-                <p><strong>Year:</strong> {student.year}</p>
-                <p><strong>Student Number:</strong> {student.studentID}</p>
-                <p><strong>NRC:</strong> {student.nrcNo}</p>
-                <p><strong>Loan Number:</strong> {student.loanNumber}</p>
-                <p><strong>Qualification:</strong> {student.qualification}</p>
-                <p><strong>School:</strong> {student.school}</p>
-              </>
+              <div className="error-state">
+                <div className="error-icon">⚠️</div>
+                <h4>Profile Not Available</h4>
+                <p>Please log in again to access your profile.</p>
+              </div>
             )}
           </div>
 
           {/* Documents Tab */}
           <div className="tab-content documents-content">
-            {loading ? (
-              <p>Loading documents...</p>
-            ) : documents.length === 0 ? (
-              <p>No documents uploaded yet.</p>
+            {documents.length === 0 ? (
+              <div className="empty-state">
+                <div className="empty-icon">📁</div>
+                <h4>No Documents Uploaded</h4>
+                <p>You haven't uploaded any documents yet.</p>
+                <small>Complete the screening process to upload your documents.</small>
+              </div>
             ) : (
-              documents.map((doc, idx) => (
-                <div key={idx} className="document-item">
-                  <span style={{ textTransform: "capitalize" }}>
-                    {doc.name.replace(/([A-Z])/g, " $1")}
-                  </span>
-                  <a href={doc.url} target="_blank" rel="noopener noreferrer">
-                    View
-                  </a>
+              <div className="documents-list">
+                <div className="documents-header">
+                  <h4>Uploaded Documents ({documents.length})</h4>
                 </div>
-              ))
+                {documents.map((doc, idx) => (
+                  <div key={idx} className="document-item">
+                    <div className="document-info">
+                      <span className="document-icon">📄</span>
+                      <span className="document-name">{doc.name}</span>
+                    </div>
+                    <a href={doc.url} target="_blank" rel="noopener noreferrer" className="view-document-btn">
+                      View
+                    </a>
+                  </div>
+                ))}
+              </div>
             )}
           </div>
 
           {/* Loan Tab */}
           <div className="tab-content loan-content">
-            <p><strong>Tuition Fee:</strong> K{loanInfo.details.tuition?.toLocaleString()}</p>
-            <p><strong>Accommodation:</strong> K{loanInfo.details.accommodation?.toLocaleString()}</p>
-            <p>
-              <strong>Meal Allowance:</strong> K{loanInfo.details.mealAllowance?.toLocaleString()} (
-              {loanInfo.details.monthsCovered} months)
-            </p>
-            <hr />
-            <p><strong>Total Loan for the Year:</strong> K{loanInfo.total.toLocaleString()}</p>
-            <p><strong>Remaining Balance:</strong> K{loanInfo.remaining.toLocaleString()}</p>
-            <div className="loan-bar-container" aria-hidden>
-              <div
-                className="loan-bar"
-                style={{
-                  width: `${Math.min((loanInfo.remaining / loanInfo.total) * 100, 100)}%`,
-                  background: "#28a745",
-                }}
-              ></div>
-            </div>
-            <p>Loan repayment progress</p>
+            {student ? (
+              <>
+                <div className="loan-section">
+                  <h4>Current Year Allocation</h4>
+                  <div className="loan-breakdown">
+                    <div className="loan-item">
+                      <span>Tuition Fee:</span>
+                      <strong>K{loanInfo.currentYearAllocation.tuition.toLocaleString()}</strong>
+                    </div>
+                    <div className="loan-item">
+                      <span>Accommodation:</span>
+                      <strong>K{loanInfo.currentYearAllocation.accommodation.toLocaleString()}</strong>
+                    </div>
+                    <div className="loan-item">
+                      <span>Meal Allowance:</span>
+                      <strong>K{loanInfo.currentYearAllocation.mealAllowance.toLocaleString()}</strong>
+                    </div>
+                    <div className="loan-total">
+                      <span>Total This Year:</span>
+                      <strong>K{loanInfo.currentYearAllocation.total.toLocaleString()}</strong>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="loan-section">
+                  <h4>Outstanding Balance</h4>
+                  <div className="outstanding-balance">
+                    <div className="balance-amount">K{loanInfo.outstandingBalance.toLocaleString()}</div>
+                    <p>Total loan amount allocated for your studies</p>
+                  </div>
+                </div>
+              </>
+            ) : (
+              <div className="error-state">
+                <div className="error-icon">💰</div>
+                <h4>Loan Information Unavailable</h4>
+                <p>Please log in to view loan details.</p>
+              </div>
+            )}
           </div>
         </div>
       </div>

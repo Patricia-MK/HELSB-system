@@ -40,27 +40,65 @@ router.post(
   ]),
   async (req, res) => {
     try {
+      console.log("📁 Upload request received");
+      console.log("Body:", req.body);
+      console.log("Files:", req.files);
+
       const { studentId, loanType } = req.body;
-      if (!studentId) return res.status(400).json({ message: "Missing studentId." });
-      if (!loanType) return res.status(400).json({ message: "Missing loanType." });
+      if (!studentId) {
+        return res.status(400).json({ 
+          status: "error", 
+          message: "Missing studentId." 
+        });
+      }
+      
+      if (!loanType) {
+        return res.status(400).json({ 
+          status: "error", 
+          message: "Missing loanType." 
+        });
+      }
 
       const docs = {};
-      for (const key in req.files) docs[key] = `/uploads/${req.files[key][0].filename}`;
+      if (req.files) {
+        for (const key in req.files) {
+          if (req.files[key] && req.files[key][0]) {
+            docs[key] = `/uploads/${req.files[key][0].filename}`;
+          }
+        }
+      }
+
+      console.log("Processed documents:", docs);
 
       let existing = await Upload.findOne({ studentId });
       if (existing) {
         existing.documents = { ...existing.documents, ...docs };
         existing.loanType = loanType;
         await existing.save();
-        return res.json({ message: "Documents updated successfully", upload: existing });
+        return res.json({ 
+          status: "success", 
+          message: "Documents updated successfully", 
+          upload: existing 
+        });
       }
 
       const uploadRecord = new Upload({ studentId, loanType, documents: docs });
       await uploadRecord.save();
-      res.json({ message: "Documents uploaded successfully", upload: uploadRecord });
+      
+      console.log("✅ Upload saved successfully");
+      
+      res.json({ 
+        status: "success", 
+        message: "Documents uploaded successfully", 
+        upload: uploadRecord 
+      });
+      
     } catch (err) {
-      console.error("Upload error:", err);
-      res.status(500).json({ message: "Server error uploading documents" });
+      console.error("❌ Upload error:", err);
+      res.status(500).json({ 
+        status: "error", 
+        message: "Server error uploading documents: " + err.message 
+      });
     }
   }
 );
@@ -69,7 +107,8 @@ router.post(
 router.get("/:studentId", async (req, res) => {
   try {
     const upload = await Upload.findOne({ studentId: req.params.studentId });
-    if (!upload) return res.status(404).json({ message: "No documents found" });
+    if (!upload) return res.json({ documents: {} }); // Return empty object instead of 404
+    
     res.json(upload.documents || {});
   } catch (err) {
     console.error("Fetch error:", err);
