@@ -3,7 +3,8 @@ const mongoose = require("mongoose");
 const notificationSchema = new mongoose.Schema({
   studentNumber: {
     type: String,
-    required: true
+    required: true,
+    index: true
   },
   message: {
     type: String,
@@ -23,5 +24,8 @@ const notificationSchema = new mongoose.Schema({
     default: Date.now
   }
 });
+
+// Create index for better performance
+notificationSchema.index({ studentNumber: 1, createdAt: -1 });
 
 module.exports = mongoose.model("Notification", notificationSchema);

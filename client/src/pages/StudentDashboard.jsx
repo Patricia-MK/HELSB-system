@@ -1,3 +1,4 @@
+// src/pages/StudentDashboard.jsx
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
@@ -18,22 +19,57 @@ const StudentDashboard = () => {
 
   useEffect(() => {
     const stored = localStorage.getItem("user");
-    if (stored) setUser(JSON.parse(stored));
+    console.log("🔍 Raw user data from localStorage:", stored);
+    
+    if (stored) {
+      try {
+        const userData = JSON.parse(stored);
+        console.log("🔍 Parsed user object:", userData);
+        setUser(userData);
+      } catch (error) {
+        console.error("❌ Error parsing user data:", error);
+      }
+    }
   }, []);
 
   // Fixed screening end date for all students
   const screeningEndDate = new Date("2025-11-03T23:59:59");
 
-  // Fetch notifications
+  // Fetch notifications - ENHANCED VERSION
   const fetchNotifications = async () => {
     try {
-      if (!user?.studentNumber) return;
+      if (!user?.studentNumber) {
+        console.log("❌ No user or student number found for notifications");
+        console.log("Current user object:", user);
+        return;
+      }
       
+      console.log("🔄 Fetching notifications for student:", user.studentNumber);
       const res = await axios.get(`http://localhost:5000/api/notifications/student/${user.studentNumber}`);
+      
+      console.log("✅ Notifications API Response Status:", res.status);
+      console.log(`📊 Found ${res.data.length} notifications`);
+      
+      if (res.data.length > 0) {
+        console.log("Latest notification:", res.data[0]);
+      } else {
+        console.log("📭 No notifications found for this student");
+      }
+      
       setNotifications(res.data);
       setUnreadCount(res.data.filter(n => !n.read).length);
+      
     } catch (err) {
-      console.error("Error fetching notifications:", err);
+      console.error("❌ Error fetching notifications:", err);
+      if (err.response) {
+        console.error("Server response:", err.response.data);
+        console.error("Status:", err.response.status);
+        console.error("Headers:", err.response.headers);
+      } else if (err.request) {
+        console.error("No response received:", err.request);
+      } else {
+        console.error("Error message:", err.message);
+      }
     }
   };
 
@@ -68,12 +104,17 @@ const StudentDashboard = () => {
   // Fetch notifications when user data is available
   useEffect(() => {
     if (user?.studentNumber) {
-      fetchNotifications();
-      // Poll for new notifications every 30 seconds
-      const interval = setInterval(fetchNotifications, 30000);
-      return () => clearInterval(interval);
+      console.log("🎯 Starting notification polling for:", user.studentNumber);
+      fetchNotifications(); // Fetch immediately
+      
+      // Poll every 10 seconds for testing
+      const interval = setInterval(fetchNotifications, 10000);
+      return () => {
+        console.log("🛑 Stopping notification polling");
+        clearInterval(interval);
+      };
     }
-  }, [user]);
+  }, [user?.studentNumber]);
 
   useEffect(() => {
     const updateCountdown = () => {
@@ -165,6 +206,28 @@ const StudentDashboard = () => {
         </div>
 
         <div className="cards-wrapper">
+          {/* Manual Refresh Button */}
+          <div style={{ marginBottom: '20px', textAlign: 'center' }}>
+            <button 
+              onClick={fetchNotifications}
+              style={{
+                background: '#004aad',
+                color: 'white',
+                padding: '10px 20px',
+                border: 'none',
+                borderRadius: '8px',
+                cursor: 'pointer',
+                fontSize: '16px',
+                fontWeight: 'bold'
+              }}
+            >
+              🔄 Refresh Notifications
+            </button>
+            <div style={{ marginTop: '10px', color: 'white', fontSize: '14px' }}>
+              Student: {user?.studentNumber} | Notifications: {notifications.length} | Unread: {unreadCount}
+            </div>
+          </div>
+
           <div className="header-section">
             <h1 className="welcome-message">
               Welcome {user ? user.fullName : "Student"}
@@ -215,7 +278,7 @@ const StudentDashboard = () => {
                 className="view-all-btn"
                 onClick={() => setShowNotifications(true)}
               >
-                View All Notifications
+                View All Notifications ({notifications.length})
               </button>
             </div>
           </div>
@@ -227,7 +290,7 @@ const StudentDashboard = () => {
         <div className="modal-overlay">
           <div className="modal-content notifications-modal">
             <div className="modal-header">
-              <h3>Your Notifications</h3>
+              <h3>Your Notifications ({notifications.length})</h3>
               <div className="modal-actions">
                 {unreadCount > 0 && (
                   <button className="mark-all-read-btn" onClick={markAllAsRead}>

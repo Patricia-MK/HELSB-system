@@ -7,7 +7,7 @@ import Swal from "sweetalert2";
 const OfficialDashboard = () => {
   const [agreements, setAgreements] = useState([]);
   const [filteredAgreements, setFilteredAgreements] = useState([]);
-  const [activeTab, setActiveTab] = useState("All Agreement Forms");
+  const [activeTab, setActiveTab] = useState("My Assignments");
   const [loading, setLoading] = useState(false);
   const [uploads, setUploads] = useState({});
   const [showUploadsModal, setShowUploadsModal] = useState(false);
@@ -36,7 +36,6 @@ const OfficialDashboard = () => {
   // Search & filter
   useEffect(() => {
     let filtered = agreements;
-
     if (searchTerm) {
       filtered = filtered.filter(
         (a) =>
@@ -44,66 +43,48 @@ const OfficialDashboard = () => {
           a.program.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
-
     if (filterStatus) {
       filtered = filtered.filter((a) => a.status === filterStatus);
     }
-
     setFilteredAgreements(filtered);
   }, [searchTerm, filterStatus, agreements]);
 
-  // Update status with notifications - FIXED VERSION
+  // Update status
   const updateStatus = async (id, status, studentNumber, studentName) => {
     try {
-      console.log(`🔄 Official: Updating status for ${studentName} (${studentNumber}) to: ${status}`);
+      await axios.put(`http://localhost:5000/api/agreements/${id}/status`, { status });
       
-      // First update the agreement status
-      const statusResponse = await axios.put(`http://localhost:5000/api/agreements/${id}/status`, { status });
-      console.log("✅ Status update response:", statusResponse.data);
-      
-      // Then create notification
+      // Create notification
       try {
-        const notificationResponse = await axios.post(`http://localhost:5000/api/notifications`, {
+        await axios.post(`http://localhost:5000/api/notifications`, {
           studentNumber: studentNumber,
           message: `Your loan application has been ${status.toLowerCase()} by HELSB officials.`,
           type: status === "Approved" ? "success" : "warning"
         });
-        console.log("✅ Notification created:", notificationResponse.data);
       } catch (notificationError) {
-        console.error("❌ Failed to create notification:", notificationError);
-        // Continue even if notification fails
+        console.error("Notification failed:", notificationError);
       }
 
-      // Update local state
-      setAgreements((prev) =>
-        prev.map((agr) => (agr._id === id ? { ...agr, status } : agr))
-      );
-
+      setAgreements(prev => prev.map(agr => agr._id === id ? { ...agr, status } : agr));
+      
       Swal.fire({
         icon: "success",
-        title: `Agreement ${status}`,
-        text: `${studentName}'s application has been ${status.toLowerCase()}`,
+        title: `Application ${status}`,
+        text: `${studentName}'s application has been ${status.toLowerCase()}.`,
         timer: 1500,
         showConfirmButton: false,
       });
     } catch (err) {
-      console.error("❌ Failed to update status:", err);
-      
-      let errorMessage = "Could not update status. Try again.";
-      if (err.response) {
-        errorMessage = err.response.data?.message || errorMessage;
-        console.error("Server response:", err.response.data);
-      }
-      
+      console.error("Failed to update status:", err);
       Swal.fire({
         icon: "error",
         title: "Error",
-        text: errorMessage,
+        text: "Could not update status. Try again.",
       });
     }
   };
 
-  // View uploads - FIXED ROUTE
+  // View uploads
   const viewUploads = async (studentNumber, studentName) => {
     try {
       const res = await axios.get(`http://localhost:5000/api/upload/student-number/${studentNumber}`);
@@ -111,7 +92,6 @@ const OfficialDashboard = () => {
       setSelectedStudent(studentName);
       setShowUploadsModal(true);
     } catch (err) {
-      console.error("Fetch error:", err);
       Swal.fire({
         icon: "info",
         title: "No uploaded documents found",
@@ -120,9 +100,8 @@ const OfficialDashboard = () => {
     }
   };
 
-  const totalAgreements = agreements.length;
-  const totalFirstYears = agreements.filter((a) => a.year === "1" || a.year === 1).length;
-  const totalReturning = totalAgreements - totalFirstYears;
+  const pendingCount = agreements.filter(a => !a.status || a.status === "Pending").length;
+  const approvedCount = agreements.filter(a => a.status === "Approved").length;
 
   return (
     <div className="flex min-h-screen bg-gray-100">
@@ -133,82 +112,78 @@ const OfficialDashboard = () => {
           HELSB Official Dashboard
         </h2>
 
-        {/* Search & Filter */}
-        {activeTab === "All Agreement Forms" && (
-          <div className="flex items-center space-x-4 mb-4">
-            <input
-              type="text"
-              placeholder="Search by student or program..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="p-2 border rounded w-1/3"
-            />
-            <select
-              value={filterStatus}
-              onChange={(e) => setFilterStatus(e.target.value)}
-              className="p-2 border rounded"
-            >
-              <option value="">All Statuses</option>
-              <option value="Pending">Pending</option>
-              <option value="Approved">Approved</option>
-              <option value="Rejected">Rejected</option>
-            </select>
-          </div>
-        )}
-
-        {/* Summary Stats */}
-        {activeTab === "Summary Stats" && (
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
-            <div className="bg-white rounded-lg shadow-md p-5 border-l-4 border-blue-500">
-              <h4 className="text-gray-500">Total Agreements</h4>
-              <p className="text-3xl font-bold">{totalAgreements}</p>
+        {/* Official Stats */}
+        {activeTab === "My Assignments" && (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div className="bg-white rounded-lg shadow-md p-6 border-l-4 border-blue-500">
+              <h4 className="text-gray-500">Total Assigned</h4>
+              <p className="text-3xl font-bold">{agreements.length}</p>
             </div>
-            <div className="bg-white rounded-lg shadow-md p-5 border-l-4 border-green-500">
-              <h4 className="text-gray-500">First-Year Students</h4>
-              <p className="text-3xl font-bold">{totalFirstYears}</p>
+            <div className="bg-white rounded-lg shadow-md p-6 border-l-4 border-yellow-500">
+              <h4 className="text-gray-500">Pending Review</h4>
+              <p className="text-3xl font-bold">{pendingCount}</p>
             </div>
-            <div className="bg-white rounded-lg shadow-md p-5 border-l-4 border-yellow-500">
-              <h4 className="text-gray-500">Returning Students</h4>
-              <p className="text-3xl font-bold">{totalReturning}</p>
+            <div className="bg-white rounded-lg shadow-md p-6 border-l-4 border-green-500">
+              <h4 className="text-gray-500">Approved</h4>
+              <p className="text-3xl font-bold">{approvedCount}</p>
             </div>
           </div>
         )}
 
-        {/* All Agreement Forms Table */}
-        {activeTab === "All Agreement Forms" && (
+        {/* Applications Table */}
+        {(activeTab === "My Assignments" || activeTab === "All Applications") && (
           <div className="bg-white shadow-md rounded-lg p-6">
-            <h3 className="text-xl font-semibold mb-4 text-gray-700">
-              Submitted Student Agreements ({filteredAgreements.length})
-            </h3>
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-xl font-semibold">
+                {activeTab === "My Assignments" ? "My Assigned Applications" : "All Applications"} ({filteredAgreements.length})
+              </h3>
+              <div className="flex gap-4">
+                <input
+                  type="text"
+                  placeholder="Search by student or program..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="p-2 border rounded w-64"
+                />
+                <select
+                  value={filterStatus}
+                  onChange={(e) => setFilterStatus(e.target.value)}
+                  className="p-2 border rounded"
+                >
+                  <option value="">All Statuses</option>
+                  <option value="Pending">Pending</option>
+                  <option value="Approved">Approved</option>
+                  <option value="Rejected">Rejected</option>
+                </select>
+              </div>
+            </div>
 
             {loading ? (
               <p>Loading...</p>
             ) : filteredAgreements.length === 0 ? (
-              <p className="text-gray-500">No agreements found.</p>
+              <p className="text-gray-500 text-center py-8">No applications found.</p>
             ) : (
               <div className="overflow-x-auto">
-                <table className="min-w-full text-sm text-left text-gray-700 border">
-                  <thead className="bg-blue-50 text-gray-600 uppercase">
+                <table className="min-w-full text-sm text-left text-gray-700">
+                  <thead className="bg-gray-50 text-gray-600 uppercase">
                     <tr>
-                      <th className="px-4 py-2 border">Student Name</th>
-                      <th className="px-4 py-2 border">Student Number</th>
-                      <th className="px-4 py-2 border">Program</th>
-                      <th className="px-4 py-2 border">Institution</th>
-                      <th className="px-4 py-2 border">Year</th>
-                      <th className="px-4 py-2 border">Status</th>
-                      <th className="px-4 py-2 border">Date</th>
-                      <th className="px-4 py-2 border">Actions</th>
+                      <th className="px-4 py-3">Student Name</th>
+                      <th className="px-4 py-3">Student Number</th>
+                      <th className="px-4 py-3">Program</th>
+                      <th className="px-4 py-3">Institution</th>
+                      <th className="px-4 py-3">Status</th>
+                      <th className="px-4 py-3">Date</th>
+                      <th className="px-4 py-3">Actions</th>
                     </tr>
                   </thead>
                   <tbody>
                     {filteredAgreements.map((agr) => (
                       <tr key={agr._id} className="border-t hover:bg-gray-50">
-                        <td className="px-4 py-2 border">{agr.studentName}</td>
-                        <td className="px-4 py-2 border">{agr.studentNumber}</td>
-                        <td className="px-4 py-2 border">{agr.program}</td>
-                        <td className="px-4 py-2 border">{agr.institution}</td>
-                        <td className="px-4 py-2 border">{agr.year}</td>
-                        <td className="px-4 py-2 border">
+                        <td className="px-4 py-3">{agr.studentName}</td>
+                        <td className="px-4 py-3 font-mono">{agr.studentNumber}</td>
+                        <td className="px-4 py-3">{agr.program}</td>
+                        <td className="px-4 py-3">{agr.institution}</td>
+                        <td className="px-4 py-3">
                           <span className={`px-2 py-1 rounded text-xs ${
                             agr.status === "Approved" ? "bg-green-100 text-green-800" :
                             agr.status === "Rejected" ? "bg-red-100 text-red-800" :
@@ -217,10 +192,10 @@ const OfficialDashboard = () => {
                             {agr.status || "Pending"}
                           </span>
                         </td>
-                        <td className="px-4 py-2 border">
+                        <td className="px-4 py-3">
                           {agr.createdAt ? new Date(agr.createdAt).toLocaleDateString() : "—"}
                         </td>
-                        <td className="px-4 py-2 border space-x-2">
+                        <td className="px-4 py-3 space-x-2">
                           <button
                             className="bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600 text-sm"
                             onClick={() => updateStatus(agr._id, "Approved", agr.studentNumber, agr.studentName)}
@@ -237,7 +212,7 @@ const OfficialDashboard = () => {
                             className="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600 text-sm"
                             onClick={() => viewUploads(agr.studentNumber, agr.studentName)}
                           >
-                            View Uploads
+                            View Docs
                           </button>
                         </td>
                       </tr>
@@ -248,45 +223,45 @@ const OfficialDashboard = () => {
             )}
           </div>
         )}
-      </div>
 
-      {/* Uploads Modal */}
-      {showUploadsModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-lg p-6 max-w-2xl w-full overflow-y-auto max-h-[80vh] relative">
-            <h3 className="text-xl font-semibold mb-4">
-              Uploaded Documents for {selectedStudent}
-            </h3>
-            <button
-              className="absolute top-2 right-4 text-gray-500 hover:text-gray-800"
-              onClick={() => setShowUploadsModal(false)}
-            >
-              X
-            </button>
-            {Object.keys(uploads).length === 0 ? (
-              <p>No documents uploaded.</p>
-            ) : (
-              <div className="space-y-3">
-                {Object.entries(uploads).map(([key, url]) => (
-                  <div key={key} className="flex items-center justify-between p-2 border rounded">
-                    <span className="font-medium capitalize">
-                      {key.replace(/([A-Z])/g, ' $1').trim()}:
-                    </span>
-                    <a
-                      href={`http://localhost:5000${url}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-blue-600 underline text-sm"
-                    >
-                      View Document
-                    </a>
-                  </div>
-                ))}
-              </div>
-            )}
+        {/* Uploads Modal */}
+        {showUploadsModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg shadow-lg p-6 max-w-2xl w-full overflow-y-auto max-h-[80vh] relative">
+              <h3 className="text-xl font-semibold mb-4">
+                Uploaded Documents for {selectedStudent}
+              </h3>
+              <button
+                className="absolute top-2 right-4 text-gray-500 hover:text-gray-800"
+                onClick={() => setShowUploadsModal(false)}
+              >
+                ✕
+              </button>
+              {Object.keys(uploads).length === 0 ? (
+                <p>No documents uploaded.</p>
+              ) : (
+                <div className="space-y-3">
+                  {Object.entries(uploads).map(([key, url]) => (
+                    <div key={key} className="flex items-center justify-between p-3 border rounded">
+                      <span className="font-medium capitalize">
+                        {key.replace(/([A-Z])/g, ' $1').trim()}:
+                      </span>
+                      <a
+                        href={`http://localhost:5000${url}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-600 underline text-sm"
+                      >
+                        View Document
+                      </a>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 };
