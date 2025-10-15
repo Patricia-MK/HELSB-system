@@ -3,36 +3,44 @@ import React from "react";
 
 const OfficialSidebar = ({ activeTab, setActiveTab }) => {
   const menuItems = [
-    { name: "All Agreement Forms" },
-    { name: "Summary Stats" },
+    { id: "My Assignments", label: "📋 My Assignments", icon: "📋" },
+    { id: "All Applications", label: "📄 All Applications", icon: "📄" },
+    { id: "Performance", label: "📊 My Performance", icon: "📊" },
   ];
 
   return (
-    <aside className="w-64 bg-gray-100 p-4 flex flex-col min-h-screen shadow-md">
-      {/* Header */}
-      <div className="h-20 flex items-center justify-center border-b mb-4">
-        <h1 className="text-xl font-bold text-gray-800">HELSB Official</h1>
+    <div className="w-64 bg-white shadow-lg">
+      <div className="p-6 border-b">
+        <h2 className="text-xl font-bold text-gray-800">HELSB Official</h2>
+        <p className="text-sm text-gray-600">Screening Department</p>
       </div>
-
-      {/* Menu */}
-      <nav className="flex-1 space-y-2">
-        {menuItems.map((item) => (
-          <button
-            key={item.name}
-            onClick={() => setActiveTab(item.name)}
-            className={`w-full text-left px-3 py-2 rounded-lg transition-colors duration-200
-              ${activeTab === item.name ? "bg-blue-500 text-white" : "text-gray-700 hover:bg-gray-200"}`}
-          >
-            {item.name}
-          </button>
-        ))}
+      
+      <nav className="p-4">
+        <ul className="space-y-2">
+          {menuItems.map((item) => (
+            <li key={item.id}>
+              <button
+                onClick={() => setActiveTab(item.id)}
+                className={`w-full text-left px-4 py-3 rounded-lg transition-all ${
+                  activeTab === item.id
+                    ? "bg-green-500 text-white shadow-md"
+                    : "text-gray-700 hover:bg-gray-100"
+                }`}
+              >
+                <span className="mr-3">{item.icon}</span>
+                {item.label}
+              </button>
+            </li>
+          ))}
+        </ul>
+        
+        {/* Official Badge */}
+        <div className="mt-8 p-4 bg-green-50 rounded-lg border border-green-200">
+          <div className="text-sm font-medium text-green-800">HELSB Official</div>
+          <div className="text-xs text-green-600">Screening & Verification</div>
+        </div>
       </nav>
-
-      {/* Footer */}
-      <div className="p-4 border-t text-sm text-gray-500">
-        v1.0
-      </div>
-    </aside>
+    </div>
   );
 };
 

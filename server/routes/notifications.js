@@ -1,83 +1,182 @@
 const express = require("express");
 const router = express.Router();
-const Notification = require("../models/Notification");
+
+// Try to import Notification model with error handling
+let Notification;
+try {
+  Notification = require("../models/Notification");
+  console.log("✅ Notification model loaded successfully");
+} catch (err) {
+  console.error("❌ Failed to load Notification model:", err);
+}
 
 // Create notification
 router.post("/", async (req, res) => {
   try {
+    // Check if model is available
+    if (!Notification) {
+      return res.status(500).json({ 
+        message: "Notification model not available. Check server logs." 
+      });
+    }
+
     const { studentNumber, message, type } = req.body;
     
-    console.log("Creating notification for:", studentNumber, "Message:", message);
+    console.log("📝 CREATING NOTIFICATION =====================");
+    console.log("Student Number:", studentNumber);
+    console.log("Message:", message);
+    console.log("Type:", type);
     
+    if (!studentNumber || !message) {
+      console.log("❌ Missing required fields");
+      return res.status(400).json({ 
+        message: "Missing required fields: studentNumber and message" 
+      });
+    }
+
+    // Create notification
     const notification = new Notification({
-      studentNumber,
-      message,
+      studentNumber: studentNumber.toString().trim(),
+      message: message.toString().trim(),
       type: type || "info"
     });
     
-    await notification.save();
-    console.log("✅ Notification created successfully");
-    res.status(201).json({ message: "Notification created", notification });
+    // Save to database
+    const savedNotification = await notification.save();
+    console.log("✅ NOTIFICATION SAVED TO DATABASE:", savedNotification._id);
+    console.log("Full notification:", savedNotification);
+    console.log("===========================================");
+    
+    res.status(201).json({ 
+      message: "Notification created successfully", 
+      notification: savedNotification 
+    });
+    
   } catch (err) {
-    console.error("❌ Notification error:", err);
-    res.status(500).json({ message: "Error creating notification" });
+    console.error("❌ NOTIFICATION CREATION ERROR:", err);
+    res.status(500).json({ 
+      message: "Server error creating notification",
+      error: err.message,
+      stack: err.stack
+    });
   }
 });
 
 // Get notifications for student
 router.get("/student/:studentNumber", async (req, res) => {
   try {
+    // Check if model is available
+    if (!Notification) {
+      return res.status(500).json({ 
+        message: "Notification model not available. Check server logs." 
+      });
+    }
+
     const { studentNumber } = req.params;
     
-    console.log("Fetching notifications for:", studentNumber);
+    console.log("📨 Fetching notifications for:", studentNumber);
     
-    const notifications = await Notification.find({ studentNumber })
+    const notifications = await Notification.find({ studentNumber: studentNumber.toString().trim() })
       .sort({ createdAt: -1 })
       .limit(50);
     
-    console.log(`✅ Found ${notifications.length} notifications`);
+    console.log(`✅ Found ${notifications.length} notifications for ${studentNumber}`);
+    
     res.json(notifications);
   } catch (err) {
     console.error("❌ Get notifications error:", err);
-    res.status(500).json({ message: "Error fetching notifications" });
+    res.status(500).json({ 
+      message: "Error fetching notifications",
+      error: err.message 
+    });
   }
 });
 
-// Mark notification as read
-router.put("/:id/read", async (req, res) => {
+// Test route to check if notifications work
+router.get("/test-db", async (req, res) => {
   try {
-    const notification = await Notification.findByIdAndUpdate(
-      req.params.id,
-      { read: true },
-      { new: true }
-    );
-    
-    if (!notification) {
-      return res.status(404).json({ message: "Notification not found" });
+    // Check if model is available
+    if (!Notification) {
+      return res.status(500).json({ 
+        message: "Notification model not available. Check server logs.",
+        modelAvailable: false
+      });
     }
+
+    // Count total notifications
+    const totalCount = await Notification.countDocuments();
     
-    res.json({ message: "Notification marked as read", notification });
+    // Get sample notifications
+    const sampleNotifications = await Notification.find().limit(5).sort({ createdAt: -1 });
+    
+    console.log("🧪 DATABASE TEST =====================");
+    console.log("Total notifications in DB:", totalCount);
+    console.log("Sample notifications:", sampleNotifications);
+    console.log("=====================================");
+    
+    res.json({
+      modelAvailable: true,
+      totalCount,
+      sampleNotifications,
+      message: `Database has ${totalCount} notifications total`
+    });
   } catch (err) {
-    console.error("Mark read error:", err);
-    res.status(500).json({ message: "Error updating notification" });
+    console.error("Database test error:", err);
+    res.status(500).json({ 
+      error: err.message,
+      modelAvailable: false
+    });
   }
 });
 
-// Mark all as read
-router.put("/student/:studentNumber/read-all", async (req, res) => {
+// Test route to create a sample notification
+router.post("/test-create", async (req, res) => {
   try {
-    const { studentNumber } = req.params;
+    // Check if model is available
+    if (!Notification) {
+      return res.status(500).json({ 
+        message: "Notification model not available. Check server logs." 
+      });
+    }
+
+    const { studentNumber } = req.body;
+    const testStudentNumber = studentNumber || "2022100001";
     
-    await Notification.updateMany(
-      { studentNumber, read: false },
-      { read: true }
-    );
+    console.log("🧪 CREATING TEST NOTIFICATION ==============");
     
-    res.json({ message: "All notifications marked as read" });
+    const testNotification = new Notification({
+      studentNumber: testStudentNumber,
+      message: "🎉 This is a TEST notification from the server! Created at: " + new Date().toLocaleString(),
+      type: "success"
+    });
+    
+    const savedNotification = await testNotification.save();
+    
+    console.log("✅ Test notification created with ID:", savedNotification._id);
+    console.log("Full test notification:", savedNotification);
+    console.log("===========================================");
+    
+    res.json({ 
+      message: "Test notification created successfully",
+      notification: savedNotification 
+    });
   } catch (err) {
-    console.error("Mark all read error:", err);
-    res.status(500).json({ message: "Error updating notifications" });
+    console.error("❌ Test notification error:", err);
+    res.status(500).json({ 
+      error: err.message,
+      stack: err.stack
+    });
   }
+});
+
+// Simple health check route
+router.get("/health", (req, res) => {
+  res.json({
+    status: "OK",
+    message: "Notifications route is working",
+    timestamp: new Date().toISOString(),
+    modelAvailable: !!Notification
+  });
 });
 
 module.exports = router;
