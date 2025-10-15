@@ -12,13 +12,21 @@ const uploadRoutes = require("./routes/upload");
 const applicationRoutes = require("./routes/applicationRoutes");
 const officialRoutes = require("./routes/officialRoutes");
 const adminRoutes = require("./routes/adminRoutes");
+
+
+const studentProfileRoutes = require("./routes/studentProfile"); // ADD THIS LINE
+
+//73bdc2eff0f46d9fc07efa597db44a228d25b209
 // studapp routes
 const studappRegistrationRoutes = require("./routes/studapp-registration");
 const studappApplicationRoutes = require("./routes/studapp-application");
 const studappUploadGridRoutes = require("./routes/studapp-upload-grid");
 const studappAcademicsRoutes = require("./routes/studapp-academics");
+
 // loan application routes
 const loanApplicationRoutes = require("./routes/loanApplicationRoutes");
+
+
 
 const app = express();
 
@@ -36,6 +44,8 @@ app.use("/api/upload", uploadRoutes);
 app.use("/api/applications", applicationRoutes);
 app.use("/api/official", officialRoutes);
 app.use("/api/admin", adminRoutes);
+app.use("/api/student", studentProfileRoutes); // ADD THIS LINE
+
 // studapp
 app.use("/api/studapp/registration", studappRegistrationRoutes);
 app.use("/api/studapp/applications", studappApplicationRoutes);

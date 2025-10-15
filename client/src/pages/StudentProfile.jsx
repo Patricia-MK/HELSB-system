@@ -1,265 +1,295 @@
-import React, { useState, useRef, useEffect } from "react";
-import {
-  UserGroupIcon,
-  CheckBadgeIcon,
-  DocumentIcon,
-  ChartBarIcon,
-} from "@heroicons/react/24/outline";
-import AdminSidebar from "../components/AdminSidebar";
-import UserTable from "../components/UserTable";
-import ApplicationTable from "../components/ApplicationTable";
-import {
-  BarChart,
-  Bar,
-  PieChart,
-  Pie,
-  Cell,
-  ResponsiveContainer,
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  Tooltip,
-  Legend,
-} from "recharts";
+import React, { useState, useEffect } from "react";
+import "./StudentProfile.css";
 
-const AdminDashboard = () => {
-  const [users, setUsers] = useState([
-    { _id: 1, name: "John Doe", email: "john@example.com", role: "Student", active: true },
-    { _id: 2, name: "Jane Smith", email: "jane@example.com", role: "Official", active: true },
-  ]);
+const StudentProfile = ({ closeProfile, onCloseRefresh }) => {
+  const [student, setStudent] = useState(null);
+  const [documents, setDocuments] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [loanInfo, setLoanInfo] = useState({
+    outstandingBalance: 0,
+    currentYearAllocation: {
+      tuition: 0,
+      accommodation: 0,
+      mealAllowance: 0,
+      total: 0
+    }
+  });
 
-  const [applications] = useState([
-    { _id: 1, name: "Alice", nrc: "12345678", program: "Computer Science", loanNumber: "LN001", status: "Pending" },
-    { _id: 2, name: "Bob", nrc: "87654321", program: "Business Admin", loanNumber: "LN002", status: "Approved" },
-  ]);
-
-  const [newUser, setNewUser] = useState({ name: "", email: "", role: "Student" });
-
-  // Section refs
-  const dashboardRef = useRef(null);
-  const applicationsRef = useRef(null);
-  const usersRef = useRef(null);
-  const reportsRef = useRef(null);
-
-  const [activeSection, setActiveSection] = useState("dashboard");
-
-  const scrollToSection = {
-    dashboard: () => dashboardRef.current.scrollIntoView({ behavior: "smooth" }),
-    applications: () => applicationsRef.current.scrollIntoView({ behavior: "smooth" }),
-    users: () => usersRef.current.scrollIntoView({ behavior: "smooth" }),
-    reports: () => reportsRef.current.scrollIntoView({ behavior: "smooth" }),
-  };
-
-  // Intersection observer for active section
+  // Load student info from localStorage
   useEffect(() => {
-    const sections = [
-      { ref: dashboardRef, name: "dashboard" },
-      { ref: applicationsRef, name: "applications" },
-      { ref: usersRef, name: "users" },
-      { ref: reportsRef, name: "reports" },
-    ];
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            const section = sections.find((s) => s.ref.current === entry.target);
-            if (section) setActiveSection(section.name);
+    const loadStudentData = () => {
+      setLoading(true);
+      console.log("🔍 Loading student data from localStorage...");
+      
+      try {
+        const storedUser = localStorage.getItem("user");
+        
+        if (storedUser) {
+          const userData = JSON.parse(storedUser);
+          console.log("✅ User data found:", userData);
+          
+          if (userData && userData.email) {
+            setStudent(userData);
+            calculateLoanInfo(userData);
+            
+            // Fetch documents if student has ID
+            if (userData._id) {
+              fetchDocuments(userData._id);
+            } else {
+              setLoading(false);
+            }
+            return;
           }
-        });
-      },
-      { threshold: 0.6 }
-    );
+        }
+        
+        // If no user data found
+        console.log("❌ No valid user data found in localStorage");
+        setStudent(null);
+        setLoading(false);
+        
+      } catch (error) {
+        console.error("Error loading student data:", error);
+        setStudent(null);
+        setLoading(false);
+      }
+    };
 
-    sections.forEach((s) => s.ref.current && observer.observe(s.ref.current));
-    return () => sections.forEach((s) => s.ref.current && observer.unobserve(s.ref.current));
+    loadStudentData();
   }, []);
 
-  // User handlers
-  const handleAddUser = (e) => {
-    e.preventDefault();
-    const user = { ...newUser, _id: Date.now(), active: true };
-    setUsers([...users, user]);
-    setNewUser({ name: "", email: "", role: "Student" });
+  // Calculate loan information
+  const calculateLoanInfo = (studentData) => {
+    if (!studentData) return;
+
+    const year = studentData.year || 1;
+    
+    // Base amounts per year (HELSB rates)
+    const tuitionPerYear = 25808;
+    const accommodationPerYear = 3900;
+    const mealAllowancePerYear = 9000; // 750 * 12 months
+    
+    const totalPerYear = tuitionPerYear + accommodationPerYear + mealAllowancePerYear;
+    
+    // Calculate outstanding balance based on years completed
+    const outstandingBalance = totalPerYear * year;
+
+    const loanInfo = {
+      outstandingBalance,
+      currentYearAllocation: {
+        tuition: tuitionPerYear,
+        accommodation: accommodationPerYear,
+        mealAllowance: mealAllowancePerYear,
+        total: totalPerYear
+      }
+    };
+
+    console.log("💰 Calculated loan info:", loanInfo);
+    setLoanInfo(loanInfo);
   };
 
-  const handleDeleteUser = (id) => {
-    setUsers(users.map((u) => (u._id === id ? { ...u, active: false } : u)));
+  // Fetch uploaded documents
+  const fetchDocuments = async (studentId) => {
+    try {
+      console.log("📁 Fetching documents for student:", studentId);
+      const res = await fetch(`http://localhost:5000/api/student/documents/${studentId}`);
+      
+      if (res.ok) {
+        const data = await res.json();
+        console.log("✅ Documents received:", data.documents);
+        setDocuments(data.documents || []);
+      } else {
+        console.log("📭 No documents found");
+        setDocuments([]);
+      }
+    } catch (err) {
+      console.error("❌ Error fetching documents:", err);
+      setDocuments([]);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleEditUser = (user) => {
-    const updated = users.map((u) =>
-      u._id === user._id ? { ...u, role: user.role === "Student" ? "Official" : "Student" } : u
+  const handleClose = () => {
+    if (onCloseRefresh) onCloseRefresh();
+    closeProfile();
+  };
+
+  const getStatus = () => {
+    if (documents.length > 0) return { text: "Screening Completed", color: "#28a745" };
+    if (student) return { text: "Ready for Screening", color: "#f39c12" };
+    return { text: "Not Started", color: "#e74c3c" };
+  };
+
+  const status = getStatus();
+
+  if (loading) {
+    return (
+      <div className="profile-overlay">
+        <div className="profile-container">
+          <div className="loading-state">
+            <div className="spinner"></div>
+            Loading your profile...
+          </div>
+        </div>
+      </div>
     );
-    setUsers(updated);
-  };
-
-  // Chart data
-  const userStats = [
-    { name: "Students", value: users.filter(u => u.role === "Student").length },
-    { name: "Officials", value: users.filter(u => u.role === "Official").length },
-    { name: "Admins", value: users.filter(u => u.role === "Admin").length },
-  ];
-
-  const applicationStats = applications.map(a => ({ name: a.status, value: 1 }));
-
-  const recentActivity = [
-    { day: "Mon", activity: 2 },
-    { day: "Tue", activity: 5 },
-    { day: "Wed", activity: 3 },
-    { day: "Thu", activity: 4 },
-    { day: "Fri", activity: 6 },
-    { day: "Sat", activity: 1 },
-    { day: "Sun", activity: 0 },
-  ];
-
-  const COLORS = ["#28a745", "#f0ad4e", "#dc3545"];
+  }
 
   return (
-    <div className="flex h-screen">
-      {/* Sidebar */}
-      <AdminSidebar scrollToSection={scrollToSection} activeSection={activeSection} />
+    <div className="profile-overlay">
+      <div className="profile-container">
+        <button className="close-btn" onClick={handleClose}>×</button>
 
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col overflow-y-auto bg-gray-50">
-        {/* Header */}
-        <header className="bg-white p-6 shadow sticky top-0 z-10">
-          <h1 className="text-2xl font-bold">HELSB Admin Dashboard</h1>
-        </header>
+        <div className="profile-header">
+          <h2>Student Profile</h2>
+          <div className="status-wrapper">
+            <span className="status-label">Status:</span>
+            <span className="status-badge" style={{ backgroundColor: status.color }}>
+              {status.text}
+            </span>
+          </div>
+        </div>
 
-        {/* Main sections */}
-        <main className="p-6 space-y-12">
-          {/* Dashboard Summary */}
-          <section ref={dashboardRef}>
-            <h2 className="text-3xl font-bold mb-6 border-b-2 border-blue-300 pb-2">Dashboard</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              <div className="bg-green-100 text-green-800 p-4 rounded-lg shadow flex items-center">
-                <UserGroupIcon className="w-8 h-8 mr-3" />
-                <div>
-                  <p className="text-sm font-medium">Total Students</p>
-                  <p className="text-xl font-bold">{users.filter(u => u.role === "Student").length}</p>
+        <div className="tabs">
+          <input type="radio" name="tab" id="detailsTab" defaultChecked />
+          <label htmlFor="detailsTab">Student Details</label>
+
+          <input type="radio" name="tab" id="documentsTab" />
+          <label htmlFor="documentsTab">Documents</label>
+
+          <input type="radio" name="tab" id="loanTab" />
+          <label htmlFor="loanTab">Loan Information</label>
+
+          {/* Details Tab */}
+          <div className="tab-content details-content">
+            {student ? (
+              <div className="student-details">
+                <div className="detail-section">
+                  <h4>Personal Information</h4>
+                  <div className="detail-item">
+                    <strong>Full Name:</strong> {student.fullName}
+                  </div>
+                  <div className="detail-item">
+                    <strong>Email:</strong> {student.email}
+                  </div>
+                  <div className="detail-item">
+                    <strong>NRC:</strong> {student.nrcNo}
+                  </div>
+                </div>
+
+                <div className="detail-section">
+                  <h4>Academic Information</h4>
+                  <div className="detail-item">
+                    <strong>University:</strong> {student.institution}
+                  </div>
+                  <div className="detail-item">
+                    <strong>Program:</strong> {student.program}
+                  </div>
+                  <div className="detail-item">
+                    <strong>Year:</strong> {student.year}
+                  </div>
+                  <div className="detail-item">
+                    <strong>Qualification:</strong> {student.qualification}
+                  </div>
+                  <div className="detail-item">
+                    <strong>School:</strong> {student.school}
+                  </div>
+                </div>
+
+                <div className="detail-section">
+                  <h4>Loan Information</h4>
+                  <div className="detail-item">
+                    <strong>Student Number:</strong> {student.studentID}
+                  </div>
+                  <div className="detail-item">
+                    <strong>Loan Number:</strong> {student.loanNumber}
+                  </div>
                 </div>
               </div>
-              <div className="bg-blue-100 text-blue-800 p-4 rounded-lg shadow flex items-center">
-                <CheckBadgeIcon className="w-8 h-8 mr-3" />
-                <div>
-                  <p className="text-sm font-medium">Total Officials</p>
-                  <p className="text-xl font-bold">{users.filter(u => u.role === "Official").length}</p>
+            ) : (
+              <div className="error-state">
+                <div className="error-icon">⚠️</div>
+                <h4>Profile Not Available</h4>
+                <p>Please log in again to access your profile.</p>
+              </div>
+            )}
+          </div>
+
+          {/* Documents Tab */}
+          <div className="tab-content documents-content">
+            {documents.length === 0 ? (
+              <div className="empty-state">
+                <div className="empty-icon">📁</div>
+                <h4>No Documents Uploaded</h4>
+                <p>You haven't uploaded any documents yet.</p>
+                <small>Complete the screening process to upload your documents.</small>
+              </div>
+            ) : (
+              <div className="documents-list">
+                <div className="documents-header">
+                  <h4>Uploaded Documents ({documents.length})</h4>
                 </div>
+                {documents.map((doc, idx) => (
+                  <div key={idx} className="document-item">
+                    <div className="document-info">
+                      <span className="document-icon">📄</span>
+                      <span className="document-name">{doc.name}</span>
+                    </div>
+                    <a href={doc.url} target="_blank" rel="noopener noreferrer" className="view-document-btn">
+                      View
+                    </a>
+                  </div>
+                ))}
               </div>
-              <div className="bg-yellow-100 text-yellow-800 p-4 rounded-lg shadow flex items-center">
-                <DocumentIcon className="w-8 h-8 mr-3" />
-                <div>
-                  <p className="text-sm font-medium">Total Applications</p>
-                  <p className="text-xl font-bold">{applications.length}</p>
+            )}
+          </div>
+
+          {/* Loan Tab */}
+          <div className="tab-content loan-content">
+            {student ? (
+              <>
+                <div className="loan-section">
+                  <h4>Current Year Allocation</h4>
+                  <div className="loan-breakdown">
+                    <div className="loan-item">
+                      <span>Tuition Fee:</span>
+                      <strong>K{loanInfo.currentYearAllocation.tuition.toLocaleString()}</strong>
+                    </div>
+                    <div className="loan-item">
+                      <span>Accommodation:</span>
+                      <strong>K{loanInfo.currentYearAllocation.accommodation.toLocaleString()}</strong>
+                    </div>
+                    <div className="loan-item">
+                      <span>Meal Allowance:</span>
+                      <strong>K{loanInfo.currentYearAllocation.mealAllowance.toLocaleString()}</strong>
+                    </div>
+                    <div className="loan-total">
+                      <span>Total This Year:</span>
+                      <strong>K{loanInfo.currentYearAllocation.total.toLocaleString()}</strong>
+                    </div>
+                  </div>
                 </div>
-              </div>
-              <div className="bg-purple-100 text-purple-800 p-4 rounded-lg shadow flex items-center">
-                <ChartBarIcon className="w-8 h-8 mr-3" />
-                <div>
-                  <p className="text-sm font-medium">Recent Activity</p>
-                  <p className="text-xl font-bold">—</p>
+                
+                <div className="loan-section">
+                  <h4>Outstanding Balance</h4>
+                  <div className="outstanding-balance">
+                    <div className="balance-amount">K{loanInfo.outstandingBalance.toLocaleString()}</div>
+                    <p>Total loan amount allocated for your studies</p>
+                  </div>
                 </div>
+              </>
+            ) : (
+              <div className="error-state">
+                <div className="error-icon">💰</div>
+                <h4>Loan Information Unavailable</h4>
+                <p>Please log in to view loan details.</p>
               </div>
-            </div>
-          </section>
-
-          {/* Applications */}
-          <section ref={applicationsRef}>
-            <h3 className="text-2xl font-bold mb-4 border-b border-blue-300 pb-2">Applications</h3>
-            <ApplicationTable applications={applications} onViewClick={() => {}} />
-          </section>
-
-          {/* Users */}
-          <section ref={usersRef}>
-            <h3 className="text-2xl font-bold mb-4 border-b border-blue-300 pb-2">Users Management</h3>
-            <form onSubmit={handleAddUser} className="mb-4 flex flex-wrap gap-2">
-              <input
-                type="text"
-                placeholder="Name"
-                value={newUser.name}
-                onChange={(e) => setNewUser({ ...newUser, name: e.target.value })}
-                className="border px-2 py-1 rounded"
-              />
-              <input
-                type="email"
-                placeholder="Email"
-                value={newUser.email}
-                onChange={(e) => setNewUser({ ...newUser, email: e.target.value })}
-                className="border px-2 py-1 rounded"
-              />
-              <select
-                value={newUser.role}
-                onChange={(e) => setNewUser({ ...newUser, role: e.target.value })}
-                className="border px-2 py-1 rounded"
-              >
-                <option value="Student">Student</option>
-                <option value="Official">Official</option>
-                <option value="Admin">Admin</option>
-              </select>
-              <button type="submit" className="bg-green-500 text-white px-4 py-1 rounded">Add User</button>
-            </form>
-            <UserTable users={users} onEdit={handleEditUser} onDelete={handleDeleteUser} />
-          </section>
-
-          {/* Reports */}
-          <section ref={reportsRef}>
-            <h3 className="text-2xl font-bold mb-4 border-b border-blue-300 pb-2">Reports</h3>
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              {/* User Pie Chart */}
-              <div className="bg-white p-4 rounded-lg shadow h-64">
-                <h4 className="text-lg font-semibold mb-2">Users by Role</h4>
-                <ResponsiveContainer width="100%" height="90%">
-                  <PieChart>
-                    <Pie
-                      data={userStats}
-                      dataKey="value"
-                      nameKey="name"
-                      outerRadius={60}
-                      fill="#8884d8"
-                      label
-                    >
-                      {userStats.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                      ))}
-                    </Pie>
-                    <Tooltip />
-                  </PieChart>
-                </ResponsiveContainer>
-              </div>
-
-              {/* Applications Bar Chart */}
-              <div className="bg-white p-4 rounded-lg shadow h-64">
-                <h4 className="text-lg font-semibold mb-2">Applications Status</h4>
-                <ResponsiveContainer width="100%" height="90%">
-                  <BarChart data={applicationStats}>
-                    <XAxis dataKey="name" />
-                    <YAxis />
-                    <Tooltip />
-                    <Bar dataKey="value" fill="#8884d8" />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-
-              {/* Recent Activity Line Chart */}
-              <div className="bg-white p-4 rounded-lg shadow h-64">
-                <h4 className="text-lg font-semibold mb-2">Recent Activity</h4>
-                <ResponsiveContainer width="100%" height="90%">
-                  <LineChart data={recentActivity}>
-                    <XAxis dataKey="day" />
-                    <YAxis />
-                    <Tooltip />
-                    <Line type="monotone" dataKey="activity" stroke="#8884d8" strokeWidth={2} />
-                  </LineChart>
-                </ResponsiveContainer>
-              </div>
-            </div>
-          </section>
-        </main>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );
 };
 
-export default AdminDashboard;
+export default StudentProfile;

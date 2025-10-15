@@ -13,6 +13,11 @@ const userSchema = new mongoose.Schema({
   qualification: { type: String }, // optional for staff
   school: { type: String }, // optional for staff
   institution: { type: String }, // optional for staff
+  loanDetails: {
+    totalDisbursed: { type: Number, default: 0 },
+    totalRepaid: { type: Number, default: 0 },
+    remainingBalance: { type: Number, default: 0 }
+  }
 });
 
 module.exports = mongoose.model("User", userSchema);

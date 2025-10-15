@@ -1,15 +1,17 @@
 .info-section {
   display: flex;
   align-items: flex-start;
-  justify-content: flex-start; /* align text to left */
+  justify-content: flex-start;
   gap: 30px;
   margin: 40px 50px;
 }
 
 .info-text {
-  flex: 2; /* more space for text */
-  font-size: 16px;
+  flex: 2;
+  font-size: 20px;
   line-height: 1.6;
+  font-weight: bold;
+  color: #003366;
 }
 
 .info-image {
@@ -20,6 +22,8 @@
 }
 
 .info-image img {
-  width: 180px; /* smaller image */
-  border-radius: 8px;
+  width: 300px; /* smaller and cute */
+  height: auto;
+  border-radius: 30px;
+  box-shadow: 0px 2px 8px rgba(0, 0, 0, 0.15);
 }

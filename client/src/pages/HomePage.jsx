@@ -18,19 +18,19 @@ const HomePage = () => {
 
   const handleContactClick = () => {
     setShowContact(true);
-    window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" });
+  };
+
+  const handleCloseContact = () => {
+    setShowContact(false);
   };
 
   return (
     <div>
       <Header onContactClick={handleContactClick} />
       <HeroSection />
-      <FloatingButtons
-        activeTab={activeTab}
-        setActiveTab={setActiveTab}
-      />
+      <FloatingButtons activeTab={activeTab} setActiveTab={setActiveTab} />
       <InfoSection activeTab={activeTab} />
-      {showContact && <ContactUs />}
+      {showContact && <ContactUs onClose={handleCloseContact} />}
       <Footer />
     </div>
   );
