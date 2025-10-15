@@ -6,11 +6,8 @@ import "./StudentDashboard.css";
 import dashImage from "../assets/images/dash.jpg";
 import helsbLogo from "../assets/images/helsblogo.jpg";
 import StudentProfile from "./StudentProfile";
-<<<<<<< Updated upstream
-import Swal from "sweetalert2";
-=======
 import ScreenGuidelines from "./ScreenGuidelines";
->>>>>>> Stashed changes
+import Swal from "sweetalert2";
 
 const StudentDashboard = () => {
   const [showProfile, setShowProfile] = useState(false);
@@ -39,7 +36,6 @@ const StudentDashboard = () => {
 
   // Fixed screening end date for all students
   const screeningEndDate = new Date("2025-11-03T23:59:59");
-<<<<<<< Updated upstream
 
   // Fetch notifications - ENHANCED VERSION
   const fetchNotifications = async () => {
@@ -120,13 +116,7 @@ const StudentDashboard = () => {
         clearInterval(interval);
       };
     }
-<<<<<<< HEAD
-  }, [user]);
-=======
->>>>>>> Stashed changes
-=======
   }, [user?.studentNumber]);
->>>>>>> e310139b5c333808fcbbf13f5a6a707c34f333fb
 
   useEffect(() => {
     const updateCountdown = () => {
@@ -199,8 +189,8 @@ const StudentDashboard = () => {
           <h2>HELSB Portal</h2>
         </div>
         <nav className="sidebar-nav">
-<<<<<<< Updated upstream
-          <p onClick={() => setShowProfile(false)}>Home</p>
+          <p onClick={() => { setShowProfile(false); setShowGuidelines(false); }}>Home</p>
+          <p onClick={() => setShowGuidelines(true)}>Screen Guidelines</p>
           <p onClick={() => setShowProfile(true)}>Profile</p>
           <div className="notification-menu-item" onClick={() => setShowNotifications(true)}>
             Notifications
@@ -209,20 +199,6 @@ const StudentDashboard = () => {
             )}
           </div>
           <p onClick={handleLogout}>Log Out</p>
-=======
-          <div className="nav-item" onClick={() => { setShowProfile(false); setShowGuidelines(false); }}>
-            <span>Home</span>
-          </div>
-          <div className="nav-item" onClick={() => setShowGuidelines(true)}>
-            <span>Screen Guidelines</span>
-          </div>
-          <div className="nav-item" onClick={() => setShowProfile(true)}>
-            <span>Profile</span>
-          </div>
-          <div className="nav-item" onClick={handleLogout}>
-            <span>Log Out</span>
-          </div>
->>>>>>> Stashed changes
         </nav>
         
         <div className="user-welcome">
@@ -242,7 +218,6 @@ const StudentDashboard = () => {
           <img src={dashImage} alt="Dashboard Background" className="dash-bg" />
         </div>
 
-<<<<<<< Updated upstream
         <div className="cards-wrapper">
           {/* Manual Refresh Button */}
           <div style={{ marginBottom: '20px', textAlign: 'center' }}>
@@ -276,14 +251,6 @@ const StudentDashboard = () => {
                 {user.program && <span>Program: {user.program}</span>}
               </div>
             )}
-=======
-        <div className="dashboard-main">
-          <div className="welcome-section">
-            <h1 className="welcome-message">
-              Welcome back, <span className="highlight">{user?.fullName || 'Student'}</span>!
-            </h1>
-            <p className="welcome-subtitle">Ready to complete your annual screening?</p>
->>>>>>> Stashed changes
           </div>
 
           <div className="action-cards">
