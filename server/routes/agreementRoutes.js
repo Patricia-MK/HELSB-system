@@ -1,7 +1,104 @@
-// server/routes/agreements.js
 const express = require("express");
 const router = express.Router();
 const Agreement = require("../models/Agreement");
+
+// POST - Submit new agreement form
+router.post("/", async (req, res) => {
+  try {
+    console.log("Received agreement data:", req.body);
+
+    const {
+      receiptNumber,
+      bankName,
+      accountName,
+      branchName,
+      studentLoanNo,
+      nrcNo,
+      bankAccountNo,
+      zraTpin,
+      napsaNo,
+      program,
+      year,
+      institution,
+      studentNumber,
+      qualification,
+      school,
+      loanRate,
+      studentName,
+      ceoName,
+      date,
+      agree
+    } = req.body;
+
+    // Validate required fields
+    if (!studentNumber || !studentName || !institution || !program || !year) {
+      return res.status(400).json({ 
+        message: "Missing required fields: studentNumber, studentName, institution, program, year" 
+      });
+    }
+
+    // Check if agreement already exists for this student
+    const existingAgreement = await Agreement.findOne({ studentNumber });
+    if (existingAgreement) {
+      return res.status(409).json({ 
+        message: "An agreement already exists for this student number." 
+      });
+    }
+
+    // Create new agreement
+    const newAgreement = new Agreement({
+      receiptNumber,
+      bankName,
+      accountName,
+      branchName,
+      studentLoanNo,
+      nrcNo,
+      bankAccountNo,
+      zraTpin,
+      napsaNo,
+      program,
+      year,
+      institution,
+      studentNumber,
+      qualification,
+      school,
+      loanRate,
+      studentName,
+      ceoName,
+      date: date || new Date(),
+      agree: agree === true || agree === "true",
+      status: "Pending"
+    });
+
+    await newAgreement.save();
+    
+    console.log("Agreement saved successfully for:", studentNumber);
+    
+    res.status(201).json({ 
+      message: "Agreement submitted successfully!", 
+      agreement: newAgreement 
+    });
+
+  } catch (err) {
+    console.error("Agreement submission error:", err);
+    
+    if (err.code === 11000) {
+      return res.status(409).json({ 
+        message: "An agreement already exists for this student number." 
+      });
+    }
+    
+    if (err.name === 'ValidationError') {
+      return res.status(400).json({ 
+        message: Object.values(err.errors).map(e => e.message).join(', ') 
+      });
+    }
+    
+    res.status(500).json({ 
+      message: "Server error submitting agreement. Please try again." 
+    });
+  }
+});
 
 // GET all agreements
 router.get("/", async (req, res) => {

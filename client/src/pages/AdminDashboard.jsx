@@ -30,17 +30,29 @@ const AdminDashboard = () => {
     fetchApplicants();
   }, []);
 
-  // Approve / Reject applicant
-  const updateStatus = async (id, status, studentId) => {
+  // Approve / Reject applicant - FIXED VERSION
+  const updateStatus = async (id, status, studentNumber, studentName) => {
     try {
-      await axios.put(`http://localhost:5000/api/agreements/${id}/status`, { status });
+      console.log(`🔄 Admin: Updating status for ${studentName} (${studentNumber}) to: ${status}`);
       
-      // Notify the student
-      await axios.post(`http://localhost:5000/api/notifications`, {
-        studentId,
-        message: `Your application has been ${status.toLowerCase()} by the admin.`,
-      });
+      // First update the agreement status
+      const statusResponse = await axios.put(`http://localhost:5000/api/agreements/${id}/status`, { status });
+      console.log("✅ Status update response:", statusResponse.data);
+      
+      // Then create notification
+      try {
+        const notificationResponse = await axios.post(`http://localhost:5000/api/notifications`, {
+          studentNumber: studentNumber,
+          message: `Your loan application has been ${status.toLowerCase()} by the administrator.`,
+          type: status === "Approved" ? "success" : "warning"
+        });
+        console.log("✅ Notification created:", notificationResponse.data);
+      } catch (notificationError) {
+        console.error("❌ Failed to create notification:", notificationError);
+        // Don't fail the whole operation if notification fails
+      }
 
+      // Update local state
       setApplicants((prev) =>
         prev.map((app) => (app._id === id ? { ...app, status } : app))
       );
@@ -48,24 +60,31 @@ const AdminDashboard = () => {
       Swal.fire({
         icon: "success",
         title: "Success",
-        text: `Applicant has been ${status.toLowerCase()}`,
+        text: `${studentName}'s application has been ${status.toLowerCase()}`,
         timer: 2000,
         showConfirmButton: false,
       });
     } catch (err) {
-      console.error("Update status error:", err);
+      console.error("❌ Update status error:", err);
+      
+      let errorMessage = "Could not update status. Try again.";
+      if (err.response) {
+        errorMessage = err.response.data?.message || errorMessage;
+        console.error("Server response:", err.response.data);
+      }
+      
       Swal.fire({
         icon: "error",
         title: "Error",
-        text: "Could not update status. Try again.",
+        text: errorMessage,
       });
     }
   };
 
-  // View uploaded documents
-  const viewUploads = async (studentId, studentName) => {
+  // View uploaded documents - FIXED ROUTE
+  const viewUploads = async (studentNumber, studentName) => {
     try {
-      const res = await axios.get(`http://localhost:5000/api/upload/${studentId}`);
+      const res = await axios.get(`http://localhost:5000/api/upload/student-number/${studentNumber}`);
       setUploads(res.data);
       setSelectedStudent(studentName);
       setShowUploadsModal(true);
@@ -126,6 +145,7 @@ const AdminDashboard = () => {
               <thead className="bg-blue-50 text-gray-600 uppercase">
                 <tr>
                   <th className="px-4 py-2 border">Student Name</th>
+                  <th className="px-4 py-2 border">Student Number</th>
                   <th className="px-4 py-2 border">Program</th>
                   <th className="px-4 py-2 border">Institution</th>
                   <th className="px-4 py-2 border">Loan No</th>
@@ -138,28 +158,37 @@ const AdminDashboard = () => {
                 {filteredApplicants.map((app) => (
                   <tr key={app._id} className="border-t hover:bg-gray-50">
                     <td className="px-4 py-2 border">{app.studentName}</td>
+                    <td className="px-4 py-2 border">{app.studentNumber}</td>
                     <td className="px-4 py-2 border">{app.program}</td>
                     <td className="px-4 py-2 border">{app.institution}</td>
                     <td className="px-4 py-2 border">{app.studentLoanNo}</td>
-                    <td className="px-4 py-2 border">{app.status || "Pending"}</td>
+                    <td className="px-4 py-2 border">
+                      <span className={`px-2 py-1 rounded text-xs ${
+                        app.status === "Approved" ? "bg-green-100 text-green-800" :
+                        app.status === "Rejected" ? "bg-red-100 text-red-800" :
+                        "bg-yellow-100 text-yellow-800"
+                      }`}>
+                        {app.status || "Pending"}
+                      </span>
+                    </td>
                     <td className="px-4 py-2 border">
                       {app.date ? new Date(app.date).toLocaleDateString() : "—"}
                     </td>
                     <td className="px-4 py-2 border space-x-2">
                       <button
-                        className="bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600"
-                        onClick={() => updateStatus(app._id, "Approved", app.studentNumber)}
+                        className="bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600 text-sm"
+                        onClick={() => updateStatus(app._id, "Approved", app.studentNumber, app.studentName)}
                       >
-                        ✔
+                        Approve
                       </button>
                       <button
-                        className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
-                        onClick={() => updateStatus(app._id, "Rejected", app.studentNumber)}
+                        className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600 text-sm"
+                        onClick={() => updateStatus(app._id, "Rejected", app.studentNumber, app.studentName)}
                       >
-                        ✖
+                        Reject
                       </button>
                       <button
-                        className="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600"
+                        className="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600 text-sm"
                         onClick={() => viewUploads(app.studentNumber, app.studentName)}
                       >
                         View Uploads
@@ -188,20 +217,23 @@ const AdminDashboard = () => {
               {Object.keys(uploads).length === 0 ? (
                 <p>No documents uploaded.</p>
               ) : (
-                <ul className="space-y-2">
+                <div className="space-y-3">
                   {Object.entries(uploads).map(([key, url]) => (
-                    <li key={key}>
+                    <div key={key} className="flex items-center justify-between p-2 border rounded">
+                      <span className="font-medium capitalize">
+                        {key.replace(/([A-Z])/g, ' $1').trim()}:
+                      </span>
                       <a
-                        href={url}
+                        href={`http://localhost:5000${url}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-blue-600 underline"
+                        className="text-blue-600 underline text-sm"
                       >
-                        {key}
+                        View Document
                       </a>
-                    </li>
+                    </div>
                   ))}
-                </ul>
+                </div>
               )}
             </div>
           </div>

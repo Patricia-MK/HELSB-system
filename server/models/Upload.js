@@ -1,8 +1,15 @@
 const mongoose = require("mongoose");
 
 const uploadSchema = new mongoose.Schema({
-  studentNumber: { type: String, required: true }, // <-- added
-  loanType: { type: String, enum: ["first-timer", "returning"], required: true },
+  studentId: { 
+    type: String, 
+    required: true 
+  },
+  loanType: { 
+    type: String, 
+    enum: ["first-timer", "returning"], 
+    required: true 
+  },
   documents: {
     confirmationSlip: String,
     paymentHistory: String,
@@ -14,7 +21,15 @@ const uploadSchema = new mongoose.Schema({
     guardianNrc: String,
     passportPhotos: String,
   },
-  createdAt: { type: Date, default: Date.now },
+  createdAt: { 
+    type: Date, 
+    default: Date.now 
+  },
 });
+
+// Explicitly remove studentNumber if it exists
+if (uploadSchema.paths.studentNumber) {
+  delete uploadSchema.paths.studentNumber;
+}
 
 module.exports = mongoose.model("Upload", uploadSchema);

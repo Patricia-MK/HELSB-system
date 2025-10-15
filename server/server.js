@@ -12,7 +12,8 @@ const uploadRoutes = require("./routes/upload");
 const applicationRoutes = require("./routes/applicationRoutes");
 const officialRoutes = require("./routes/officialRoutes");
 const adminRoutes = require("./routes/adminRoutes");
-const studentProfileRoutes = require("./routes/studentProfile"); // ADD THIS LINE
+const studentProfileRoutes = require("./routes/studentProfile");
+const notificationRoutes = require("./routes/notifications");
 
 // studapp routes
 const studappRegistrationRoutes = require("./routes/studapp-registration");
@@ -39,7 +40,8 @@ app.use("/api/upload", uploadRoutes);
 app.use("/api/applications", applicationRoutes);
 app.use("/api/official", officialRoutes);
 app.use("/api/admin", adminRoutes);
-app.use("/api/student", studentProfileRoutes); // ADD THIS LINE
+app.use("/api/student", studentProfileRoutes);
+app.use("/api/notifications", notificationRoutes);
 
 // studapp
 app.use("/api/studapp/registration", studappRegistrationRoutes);

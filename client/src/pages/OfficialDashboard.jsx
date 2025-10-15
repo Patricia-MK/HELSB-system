@@ -37,7 +37,6 @@ const OfficialDashboard = () => {
   useEffect(() => {
     let filtered = agreements;
 
-    // Search by student name or program
     if (searchTerm) {
       filtered = filtered.filter(
         (a) =>
@@ -46,7 +45,6 @@ const OfficialDashboard = () => {
       );
     }
 
-    // Filter by status
     if (filterStatus) {
       filtered = filtered.filter((a) => a.status === filterStatus);
     }
@@ -54,10 +52,29 @@ const OfficialDashboard = () => {
     setFilteredAgreements(filtered);
   }, [searchTerm, filterStatus, agreements]);
 
-  // Update status
-  const updateStatus = async (id, status) => {
+  // Update status with notifications - FIXED VERSION
+  const updateStatus = async (id, status, studentNumber, studentName) => {
     try {
-      await axios.put(`http://localhost:5000/api/agreements/${id}/status`, { status });
+      console.log(`🔄 Official: Updating status for ${studentName} (${studentNumber}) to: ${status}`);
+      
+      // First update the agreement status
+      const statusResponse = await axios.put(`http://localhost:5000/api/agreements/${id}/status`, { status });
+      console.log("✅ Status update response:", statusResponse.data);
+      
+      // Then create notification
+      try {
+        const notificationResponse = await axios.post(`http://localhost:5000/api/notifications`, {
+          studentNumber: studentNumber,
+          message: `Your loan application has been ${status.toLowerCase()} by HELSB officials.`,
+          type: status === "Approved" ? "success" : "warning"
+        });
+        console.log("✅ Notification created:", notificationResponse.data);
+      } catch (notificationError) {
+        console.error("❌ Failed to create notification:", notificationError);
+        // Continue even if notification fails
+      }
+
+      // Update local state
       setAgreements((prev) =>
         prev.map((agr) => (agr._id === id ? { ...agr, status } : agr))
       );
@@ -65,23 +82,31 @@ const OfficialDashboard = () => {
       Swal.fire({
         icon: "success",
         title: `Agreement ${status}`,
+        text: `${studentName}'s application has been ${status.toLowerCase()}`,
         timer: 1500,
         showConfirmButton: false,
       });
     } catch (err) {
-      console.error("Failed to update status:", err);
+      console.error("❌ Failed to update status:", err);
+      
+      let errorMessage = "Could not update status. Try again.";
+      if (err.response) {
+        errorMessage = err.response.data?.message || errorMessage;
+        console.error("Server response:", err.response.data);
+      }
+      
       Swal.fire({
         icon: "error",
-        title: "Could not update status",
-        text: "Try again",
+        title: "Error",
+        text: errorMessage,
       });
     }
   };
 
-  // View uploads
-  const viewUploads = async (studentId, studentName) => {
+  // View uploads - FIXED ROUTE
+  const viewUploads = async (studentNumber, studentName) => {
     try {
-      const res = await axios.get(`http://localhost:5000/api/upload/${studentId}`);
+      const res = await axios.get(`http://localhost:5000/api/upload/student-number/${studentNumber}`);
       setUploads(res.data);
       setSelectedStudent(studentName);
       setShowUploadsModal(true);
@@ -90,6 +115,7 @@ const OfficialDashboard = () => {
       Swal.fire({
         icon: "info",
         title: "No uploaded documents found",
+        text: "This student hasn't uploaded any documents yet.",
       });
     }
   };
@@ -115,7 +141,7 @@ const OfficialDashboard = () => {
               placeholder="Search by student or program..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="p-2 border rounded"
+              className="p-2 border rounded w-1/3"
             />
             <select
               value={filterStatus}
@@ -152,7 +178,7 @@ const OfficialDashboard = () => {
         {activeTab === "All Agreement Forms" && (
           <div className="bg-white shadow-md rounded-lg p-6">
             <h3 className="text-xl font-semibold mb-4 text-gray-700">
-              Submitted Student Agreements
+              Submitted Student Agreements ({filteredAgreements.length})
             </h3>
 
             {loading ? (
@@ -165,7 +191,7 @@ const OfficialDashboard = () => {
                   <thead className="bg-blue-50 text-gray-600 uppercase">
                     <tr>
                       <th className="px-4 py-2 border">Student Name</th>
-                      <th className="px-4 py-2 border">Loan No</th>
+                      <th className="px-4 py-2 border">Student Number</th>
                       <th className="px-4 py-2 border">Program</th>
                       <th className="px-4 py-2 border">Institution</th>
                       <th className="px-4 py-2 border">Year</th>
@@ -178,29 +204,37 @@ const OfficialDashboard = () => {
                     {filteredAgreements.map((agr) => (
                       <tr key={agr._id} className="border-t hover:bg-gray-50">
                         <td className="px-4 py-2 border">{agr.studentName}</td>
-                        <td className="px-4 py-2 border">{agr.studentLoanNo}</td>
+                        <td className="px-4 py-2 border">{agr.studentNumber}</td>
                         <td className="px-4 py-2 border">{agr.program}</td>
                         <td className="px-4 py-2 border">{agr.institution}</td>
                         <td className="px-4 py-2 border">{agr.year}</td>
-                        <td className="px-4 py-2 border">{agr.status || "Pending"}</td>
                         <td className="px-4 py-2 border">
-                          {agr.date ? new Date(agr.date).toLocaleDateString() : "—"}
+                          <span className={`px-2 py-1 rounded text-xs ${
+                            agr.status === "Approved" ? "bg-green-100 text-green-800" :
+                            agr.status === "Rejected" ? "bg-red-100 text-red-800" :
+                            "bg-yellow-100 text-yellow-800"
+                          }`}>
+                            {agr.status || "Pending"}
+                          </span>
+                        </td>
+                        <td className="px-4 py-2 border">
+                          {agr.createdAt ? new Date(agr.createdAt).toLocaleDateString() : "—"}
                         </td>
                         <td className="px-4 py-2 border space-x-2">
                           <button
-                            className="bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600"
-                            onClick={() => updateStatus(agr._id, "Approved")}
+                            className="bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600 text-sm"
+                            onClick={() => updateStatus(agr._id, "Approved", agr.studentNumber, agr.studentName)}
                           >
-                            ✅
+                            Approve
                           </button>
                           <button
-                            className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
-                            onClick={() => updateStatus(agr._id, "Rejected")}
+                            className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600 text-sm"
+                            onClick={() => updateStatus(agr._id, "Rejected", agr.studentNumber, agr.studentName)}
                           >
-                            ❌
+                            Reject
                           </button>
                           <button
-                            className="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600"
+                            className="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600 text-sm"
                             onClick={() => viewUploads(agr.studentNumber, agr.studentName)}
                           >
                             View Uploads
@@ -232,20 +266,23 @@ const OfficialDashboard = () => {
             {Object.keys(uploads).length === 0 ? (
               <p>No documents uploaded.</p>
             ) : (
-              <ul className="space-y-2">
+              <div className="space-y-3">
                 {Object.entries(uploads).map(([key, url]) => (
-                  <li key={key}>
+                  <div key={key} className="flex items-center justify-between p-2 border rounded">
+                    <span className="font-medium capitalize">
+                      {key.replace(/([A-Z])/g, ' $1').trim()}:
+                    </span>
                     <a
-                      href={url}
+                      href={`http://localhost:5000${url}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-blue-600 underline"
+                      className="text-blue-600 underline text-sm"
                     >
-                      {key}
+                      View Document
                     </a>
-                  </li>
+                  </div>
                 ))}
-              </ul>
+              </div>
             )}
           </div>
         </div>
