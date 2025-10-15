@@ -1,8 +1,10 @@
+// server/routes/upload.js
 const express = require("express");
 const router = express.Router();
 const multer = require("multer");
 const path = require("path");
 const fs = require("fs");
+const mongoose = require("mongoose");
 const Upload = require("../models/Upload");
 
 // Ensure uploads folder exists
@@ -24,7 +26,7 @@ const upload = multer({
   },
 });
 
-// POST /api/upload/documents
+// POST upload documents
 router.post(
   "/documents",
   upload.fields([
@@ -45,6 +47,7 @@ router.post(
       console.log("Files:", req.files);
 
       const { studentId, loanType } = req.body;
+<<<<<<< HEAD
       if (!studentId) {
         return res.status(400).json({ 
           status: "error", 
@@ -58,6 +61,9 @@ router.post(
           message: "Missing loanType." 
         });
       }
+=======
+      if (!studentId || !loanType) return res.status(400).json({ message: "Missing studentId or loanType" });
+>>>>>>> 921d91b (Updated OfficialDashboard and AdminDashboard with new features)
 
       const docs = {};
       if (req.files) {
@@ -70,7 +76,7 @@ router.post(
 
       console.log("Processed documents:", docs);
 
-      let existing = await Upload.findOne({ studentId });
+      let existing = await Upload.findOne({ studentId: studentId });
       if (existing) {
         existing.documents = { ...existing.documents, ...docs };
         existing.loanType = loanType;
@@ -103,12 +109,23 @@ router.post(
   }
 );
 
-// GET /api/upload/:studentId
+// GET uploads by studentId
 router.get("/:studentId", async (req, res) => {
   try {
+<<<<<<< HEAD
     const upload = await Upload.findOne({ studentId: req.params.studentId });
     if (!upload) return res.json({ documents: {} }); // Return empty object instead of 404
     
+=======
+    const { studentId } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(studentId)) {
+      return res.status(400).json({ message: "Invalid studentId" });
+    }
+
+    const upload = await Upload.findOne({ studentId });
+    if (!upload) return res.status(404).json({ message: "No documents found" });
+
+>>>>>>> 921d91b (Updated OfficialDashboard and AdminDashboard with new features)
     res.json(upload.documents || {});
   } catch (err) {
     console.error("Fetch error:", err);

@@ -1,7 +1,7 @@
 const mongoose = require("mongoose");
 
 const uploadSchema = new mongoose.Schema({
-  studentId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+  studentNumber: { type: String, required: true }, // <-- added
   loanType: { type: String, enum: ["first-timer", "returning"], required: true },
   documents: {
     confirmationSlip: String,
@@ -10,9 +10,9 @@ const uploadSchema = new mongoose.Schema({
     proofOfPayment: String,
     nrc: String,
     bankStatement: String,
-    grade12Results: String,      // first-timers only
-    guardianNrc: String,         // first-timers only
-    passportPhotos: String,      // first-timers only
+    grade12Results: String,
+    guardianNrc: String,
+    passportPhotos: String,
   },
   createdAt: { type: Date, default: Date.now },
 });

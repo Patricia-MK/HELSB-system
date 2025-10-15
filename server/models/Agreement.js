@@ -22,6 +22,7 @@ const agreementSchema = new mongoose.Schema({
   ceoName: { type: String },
   date: { type: Date, required: true },
   agree: { type: Boolean, required: true },
+  status: { type: String, default: "Pending" },
 }, { timestamps: true });
 
 module.exports = mongoose.model("Agreement", agreementSchema);
