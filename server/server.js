@@ -12,14 +12,13 @@ const uploadRoutes = require("./routes/upload");
 const applicationRoutes = require("./routes/applicationRoutes");
 const officialRoutes = require("./routes/officialRoutes");
 const adminRoutes = require("./routes/adminRoutes");
-<<<<<<< HEAD
 // studapp routes
 const studappRegistrationRoutes = require("./routes/studapp-registration");
 const studappApplicationRoutes = require("./routes/studapp-application");
 const studappUploadGridRoutes = require("./routes/studapp-upload-grid");
 const studappAcademicsRoutes = require("./routes/studapp-academics");
-=======
->>>>>>> 5741aec685c4430bcf7837817f431d84f870221f
+// loan application routes
+const loanApplicationRoutes = require("./routes/loanApplicationRoutes");
 
 const app = express();
 
@@ -42,6 +41,8 @@ app.use("/api/studapp/registration", studappRegistrationRoutes);
 app.use("/api/studapp/applications", studappApplicationRoutes);
 app.use("/api/studapp/upload-grid", studappUploadGridRoutes);
 app.use("/api/studapp/academics", studappAcademicsRoutes);
+// loan applications
+app.use("/api/loan-applications", loanApplicationRoutes);
 
 // DB Connection
 mongoose.connect("mongodb://127.0.0.1:27017/helsb_db", {

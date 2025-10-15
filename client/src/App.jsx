@@ -10,6 +10,12 @@ import AgreementForm from "./pages/AgreementForm";
 import UploadFirstTimer from "./pages/UploadFirstTimer";
 import UploadReturning from "./pages/UploadReturning";
 import StudappDashboard from "./pages/studapp-dashboard";
+// Loan Application Components
+import LoanDashboard from "./pages/LoanDashboard";
+import LoanApplicationForm from "./pages/LoanApplicationForm";
+// Student Application Components
+import StudentApplicationPage from "./pages/StudentApplicationPage";
+import StudentApplicationForm from "./pages/StudentApplicationForm";
 function App() {
   return (
     <Routes>
@@ -23,7 +29,12 @@ function App() {
       <Route path="/agreement-form" element={<AgreementForm />} />
       <Route path="/upload-first-timer" element={<UploadFirstTimer />} />
       <Route path="/upload-returning" element={<UploadReturning />} />
-
+      {/* Loan Application Routes */}
+      <Route path="/loan-dashboard" element={<LoanDashboard />} />
+      <Route path="/loan-application-form" element={<LoanApplicationForm />} />
+      {/* Student Application Routes */}
+      <Route path="/student-application" element={<StudentApplicationPage />} />
+      <Route path="/student-application-form" element={<StudentApplicationForm />} />
     </Routes>
   );
 }

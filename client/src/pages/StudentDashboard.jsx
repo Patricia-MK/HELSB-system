@@ -19,6 +19,10 @@ const StudentDashboard = () => {
     navigate("/agreement-form"); // navigates to AgreementForm
   };
 
+  const handleLoanApplication = () => {
+    navigate("/loan-dashboard"); // navigates to Loan Dashboard
+  };
+
   return (
     <div className="dashboard">
       {/* Sidebar */}
@@ -52,6 +56,12 @@ const StudentDashboard = () => {
               <h3>Start Screening</h3>
               <p>Begin your student screening process here.</p>
               <button onClick={handleStartScreening}>Start Now</button>
+            </div>
+
+            <div className="card">
+              <h3>Loan Applications</h3>
+              <p>Apply for student loans and manage your applications.</p>
+              <button onClick={handleLoanApplication}>Apply Now</button>
             </div>
 
             <div className="card">
