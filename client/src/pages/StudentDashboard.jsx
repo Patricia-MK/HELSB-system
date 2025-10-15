@@ -5,10 +5,15 @@ import "./StudentDashboard.css";
 import dashImage from "../assets/images/dash.jpg";
 import helsbLogo from "../assets/images/helsblogo.jpg";
 import StudentProfile from "./StudentProfile";
+<<<<<<< Updated upstream
 import Swal from "sweetalert2";
+=======
+import ScreenGuidelines from "./ScreenGuidelines";
+>>>>>>> Stashed changes
 
 const StudentDashboard = () => {
   const [showProfile, setShowProfile] = useState(false);
+  const [showGuidelines, setShowGuidelines] = useState(false);
   const [user, setUser] = useState(null);
   const [remainingTime, setRemainingTime] = useState("");
   const [notifications, setNotifications] = useState([]);
@@ -23,6 +28,7 @@ const StudentDashboard = () => {
 
   // Fixed screening end date for all students
   const screeningEndDate = new Date("2025-11-03T23:59:59");
+<<<<<<< Updated upstream
 
   // Fetch notifications
   const fetchNotifications = async () => {
@@ -74,6 +80,8 @@ const StudentDashboard = () => {
       return () => clearInterval(interval);
     }
   }, [user]);
+=======
+>>>>>>> Stashed changes
 
   useEffect(() => {
     const updateCountdown = () => {
@@ -81,7 +89,7 @@ const StudentDashboard = () => {
       const timeLeft = screeningEndDate - now;
 
       if (timeLeft <= 0) {
-        setRemainingTime("Screening period has ended. You can no longer screen.");
+        setRemainingTime("Screening period has ended");
         return;
       }
 
@@ -143,9 +151,10 @@ const StudentDashboard = () => {
       <aside className="sidebar">
         <div className="logo-section">
           <img src={helsbLogo} alt="HELSB Logo" className="helsb-logo" />
-          <h2>HELSB</h2>
+          <h2>HELSB Portal</h2>
         </div>
         <nav className="sidebar-nav">
+<<<<<<< Updated upstream
           <p onClick={() => setShowProfile(false)}>Home</p>
           <p onClick={() => setShowProfile(true)}>Profile</p>
           <div className="notification-menu-item" onClick={() => setShowNotifications(true)}>
@@ -155,7 +164,31 @@ const StudentDashboard = () => {
             )}
           </div>
           <p onClick={handleLogout}>Log Out</p>
+=======
+          <div className="nav-item" onClick={() => { setShowProfile(false); setShowGuidelines(false); }}>
+            <span>Home</span>
+          </div>
+          <div className="nav-item" onClick={() => setShowGuidelines(true)}>
+            <span>Screen Guidelines</span>
+          </div>
+          <div className="nav-item" onClick={() => setShowProfile(true)}>
+            <span>Profile</span>
+          </div>
+          <div className="nav-item" onClick={handleLogout}>
+            <span>Log Out</span>
+          </div>
+>>>>>>> Stashed changes
         </nav>
+        
+        <div className="user-welcome">
+          <div className="user-avatar">
+            {user?.fullName?.charAt(0) || 'S'}
+          </div>
+          <div className="user-info">
+            <strong>{user?.fullName || 'Student'}</strong>
+            <span>Year {user?.year || '1'} Student</span>
+          </div>
+        </div>
       </aside>
 
       {/* Main Content */}
@@ -164,6 +197,7 @@ const StudentDashboard = () => {
           <img src={dashImage} alt="Dashboard Background" className="dash-bg" />
         </div>
 
+<<<<<<< Updated upstream
         <div className="cards-wrapper">
           <div className="header-section">
             <h1 className="welcome-message">
@@ -175,24 +209,35 @@ const StudentDashboard = () => {
                 {user.program && <span>Program: {user.program}</span>}
               </div>
             )}
+=======
+        <div className="dashboard-main">
+          <div className="welcome-section">
+            <h1 className="welcome-message">
+              Welcome back, <span className="highlight">{user?.fullName || 'Student'}</span>!
+            </h1>
+            <p className="welcome-subtitle">Ready to complete your annual screening?</p>
+>>>>>>> Stashed changes
           </div>
 
-          <div className="content-cards">
+          <div className="action-cards">
             {/* Screening Card */}
-            <div className="card">
+            <div className="action-card primary-card">
               <h3>Start Screening</h3>
-              <p>Begin your student screening process here.</p>
-              <button onClick={handleStartScreening}>Start Now</button>
+              <p>Begin your student screening process and complete all required steps</p>
+              <button onClick={handleStartScreening} className="card-btn primary-btn">
+                Start Screening Process
+              </button>
             </div>
 
             {/* Countdown Timer Card */}
-            <div className="card timer-card">
+            <div className="action-card timer-card">
               <h3>Screening Countdown</h3>
-              <p className="timer-numbers">{remainingTime}</p>
-              <small>
-                You have three weeks to complete your screening. After this
-                period, submissions will be closed.
-              </small>
+              <div className="timer-display">
+                {remainingTime}
+              </div>
+              <p className="timer-note">
+                Complete your screening before the deadline to ensure continuous loan support
+              </p>
             </div>
 
             {/* Quick Status Card */}
@@ -279,6 +324,11 @@ const StudentDashboard = () => {
           closeProfile={() => setShowProfile(false)}
           onCloseRefresh={refreshUser}
         />
+      )}
+
+      {/* Guidelines Full Page Overlay */}
+      {showGuidelines && (
+        <ScreenGuidelines closeGuidelines={() => setShowGuidelines(false)} />
       )}
     </div>
   );
