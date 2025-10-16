@@ -13,9 +13,36 @@ const StudentDashboard = () => {
   const [remainingTime, setRemainingTime] = useState("");
   const navigate = useNavigate();
 
+  // Load student info from localStorage and refresh when profileRefresh event is triggered
   useEffect(() => {
-    const stored = localStorage.getItem("user");
-    if (stored) setUser(JSON.parse(stored));
+    const loadUserData = () => {
+      const stored = localStorage.getItem("user");
+      if (stored) {
+        try {
+          const userData = JSON.parse(stored);
+          setUser(userData);
+          console.log("🔄 User data loaded:", userData);
+        } catch (error) {
+          console.error("Error parsing user data:", error);
+        }
+      }
+    };
+
+    // Load initial data
+    loadUserData();
+
+    // Listen for profile refresh events (triggered after document uploads)
+    const handleProfileRefresh = () => {
+      console.log("🔄 Profile refresh event received");
+      loadUserData();
+    };
+
+    window.addEventListener('profileRefresh', handleProfileRefresh);
+
+    // Cleanup
+    return () => {
+      window.removeEventListener('profileRefresh', handleProfileRefresh);
+    };
   }, []);
 
   // Fixed screening end date for all students
@@ -42,7 +69,7 @@ const StudentDashboard = () => {
     updateCountdown();
     const interval = setInterval(updateCountdown, 1000);
     return () => clearInterval(interval);
-  }, []);
+  }, [screeningEndDate]);
 
   const handleStartScreening = () => {
     const now = new Date();
@@ -61,7 +88,15 @@ const StudentDashboard = () => {
 
   const refreshUser = () => {
     const stored = localStorage.getItem("user");
-    if (stored) setUser(JSON.parse(stored));
+    if (stored) {
+      try {
+        const userData = JSON.parse(stored);
+        setUser(userData);
+        console.log("🔄 User data refreshed manually:", userData);
+      } catch (error) {
+        console.error("Error parsing user data:", error);
+      }
+    }
   };
 
   return (
@@ -74,7 +109,6 @@ const StudentDashboard = () => {
         </div>
         <nav className="sidebar-nav">
           <div className="nav-item" onClick={() => { setShowProfile(false); setShowGuidelines(false); }}>
-<<<<<<< Updated upstream
             <span>Home</span>
           </div>
           <div className="nav-item" onClick={() => setShowGuidelines(true)}>
@@ -84,21 +118,6 @@ const StudentDashboard = () => {
             <span>Profile</span>
           </div>
           <div className="nav-item" onClick={handleLogout}>
-=======
-            <span className="nav-icon">🏠</span>
-            <span>Home</span>
-          </div>
-          <div className="nav-item" onClick={() => setShowGuidelines(true)}>
-            <span className="nav-icon">📋</span>
-            <span>Screen Guidelines</span>
-          </div>
-          <div className="nav-item" onClick={() => setShowProfile(true)}>
-            <span className="nav-icon">👤</span>
-            <span>Profile</span>
-          </div>
-          <div className="nav-item" onClick={handleLogout}>
-            <span className="nav-icon">🚪</span>
->>>>>>> Stashed changes
             <span>Log Out</span>
           </div>
         </nav>
@@ -121,16 +140,10 @@ const StudentDashboard = () => {
         </div>
 
         <div className="dashboard-main">
-<<<<<<< Updated upstream
           {/* Welcome Section - Clean with just text on image */}
           <div className="welcome-section">
             <h1 className="welcome-message">
               Welcome back, <span className="highlight">{user?.fullName || 'Student'}</span>! 
-=======
-          <div className="welcome-section">
-            <h1 className="welcome-message">
-              Welcome back, <span className="highlight">{user?.fullName || 'Student'}</span>! 👋
->>>>>>> Stashed changes
             </h1>
             <p className="welcome-subtitle">Ready to complete your annual screening?</p>
           </div>
@@ -138,7 +151,6 @@ const StudentDashboard = () => {
           <div className="action-cards">
             {/* Screening Card */}
             <div className="action-card primary-card">
-              <div className="card-icon"></div>
               <h3>Start Screening</h3>
               <p>Begin your student screening process and complete all required steps</p>
               <button onClick={handleStartScreening} className="card-btn primary-btn">
@@ -148,7 +160,6 @@ const StudentDashboard = () => {
 
             {/* Countdown Timer Card */}
             <div className="action-card timer-card">
-              <div className="card-icon"></div>
               <h3>Screening Countdown</h3>
               <div className="timer-display">
                 {remainingTime}

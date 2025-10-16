@@ -14,12 +14,6 @@ const officialRoutes = require("./routes/officialRoutes");
 const adminRoutes = require("./routes/adminRoutes");
 const studentProfileRoutes = require("./routes/studentProfile");
 const notificationRoutes = require("./routes/notifications");
-
-<<<<<<< Updated upstream
-=======
-
->>>>>>> Stashed changes
-//73bdc2eff0f46d9fc07efa597db44a228d25b209
 // studapp routes
 const studappRegistrationRoutes = require("./routes/studapp-registration");
 const studappApplicationRoutes = require("./routes/studapp-application");
