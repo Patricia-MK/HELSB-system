@@ -12,10 +12,6 @@ const StudentApplicationPage = () => {
     navigate("/");
   };
 
-  const handleLoginClick = () => {
-    navigate("/login");
-  };
-
   const handleContactClick = () => {
     navigate("/contact");
   };
@@ -44,9 +40,6 @@ const StudentApplicationPage = () => {
             <button className="nav-link" onClick={handleHomeClick}>
               Home
             </button>
-            <button className="nav-link" onClick={handleLoginClick}>
-              Login
-            </button>
             <button className="nav-link" onClick={handleContactClick}>
               Contact
             </button>
@@ -74,9 +67,6 @@ const StudentApplicationPage = () => {
           <button className="mobile-nav-link" onClick={handleHomeClick}>
             Home
           </button>
-          <button className="mobile-nav-link" onClick={handleLoginClick}>
-            Login
-          </button>
           <button className="mobile-nav-link" onClick={handleContactClick}>
             Contact
           </button>
@@ -102,9 +92,6 @@ const StudentApplicationPage = () => {
             <div className="welcome-actions">
               <button className="start-application-btn" onClick={handleStartApplication}>
                 Start Application
-              </button>
-              <button className="learn-more-btn">
-                Learn More
               </button>
             </div>
           </div>
@@ -175,7 +162,6 @@ const StudentApplicationPage = () => {
               <h4>Quick Links</h4>
               <ul>
                 <li><button onClick={handleHomeClick}>Home</button></li>
-                <li><button onClick={handleLoginClick}>Login</button></li>
                 <li><button onClick={handleContactClick}>Contact</button></li>
               </ul>
             </div>

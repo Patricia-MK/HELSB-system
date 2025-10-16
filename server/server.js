@@ -18,6 +18,17 @@ const notificationRoutes = require("./routes/notifications");
 <<<<<<< Updated upstream
 =======
 
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
+
+
+//const studentProfileRoutes = require("./routes/studentProfile"); // ADD THIS LINE
+
+//const studentProfileRoutes = require("./routes/studentProfile");
+//const notificationRoutes = require("./routes/notifications");
+
+
 >>>>>>> Stashed changes
 //73bdc2eff0f46d9fc07efa597db44a228d25b209
 // studapp routes
