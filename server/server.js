@@ -14,6 +14,7 @@ const officialRoutes = require("./routes/officialRoutes");
 const adminRoutes = require("./routes/adminRoutes");
 const studentProfileRoutes = require("./routes/studentProfile");
 const notificationRoutes = require("./routes/notifications");
+
 // studapp routes
 const studappRegistrationRoutes = require("./routes/studapp-registration");
 const studappApplicationRoutes = require("./routes/studapp-application");
@@ -32,8 +33,8 @@ app.use(cors({
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
-app.use(express.json());
-//  CSP MIDDLEWARE 
+
+// CSP MIDDLEWARE 
 app.use((req, res, next) => {
   res.setHeader(
     'Content-Security-Policy',
