@@ -12,6 +12,9 @@ const uploadRoutes = require("./routes/upload");
 const applicationRoutes = require("./routes/applicationRoutes");
 const officialRoutes = require("./routes/officialRoutes");
 const adminRoutes = require("./routes/adminRoutes");
+const studentProfileRoutes = require("./routes/studentProfile");
+const notificationRoutes = require("./routes/notifications");
+
 
 
 

@@ -163,9 +163,11 @@ const StudentDashboard = () => {
   };
 
 
+
   const handleLoanApplication = () => {
     navigate("/loan-dashboard"); // navigates to Loan Dashboard
   };
+
   const getNotificationIcon = (type) => {
     switch (type) {
       case "success": return "✅";
@@ -273,20 +275,14 @@ const StudentDashboard = () => {
             <div className="action-card timer-card">
               <h3>Screening Countdown</h3>
 
-             { /* <p className="timer-numbers">{remainingTime}</p>
-              <small>
-                You have three weeks to complete your screening. After this
-                period, submissions will be closed.
-              </small>
-              */}
-
-
+             
               <div className="timer-display">
                 {remainingTime}
               </div>
               <p className="timer-note">
                 Complete your screening before the deadline to ensure continuous loan support
               </p>
+
 
             </div>
 
