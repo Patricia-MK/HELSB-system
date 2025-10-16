@@ -1,7 +1,7 @@
 // src/components/OfficialSidebar.jsx
 import React from "react";
 
-const OfficialSidebar = ({ activeTab, setActiveTab }) => {
+const OfficialSidebar = ({ activeTab, setActiveTab, onLogout }) => {
   const menuItems = [
     { id: "My Assignments", label: "📋 My Assignments", icon: "📋" },
     { id: "All Applications", label: "📄 All Applications", icon: "📄" },
@@ -9,13 +9,13 @@ const OfficialSidebar = ({ activeTab, setActiveTab }) => {
   ];
 
   return (
-    <div className="w-64 bg-white shadow-lg">
+    <div className="w-64 bg-white shadow-lg flex flex-col h-screen">
       <div className="p-6 border-b">
         <h2 className="text-xl font-bold text-gray-800">HELSB Official</h2>
         <p className="text-sm text-gray-600">Screening Department</p>
       </div>
       
-      <nav className="p-4">
+      <nav className="p-4 flex-1">
         <ul className="space-y-2">
           {menuItems.map((item) => (
             <li key={item.id}>
@@ -40,6 +40,17 @@ const OfficialSidebar = ({ activeTab, setActiveTab }) => {
           <div className="text-xs text-green-600">Screening & Verification</div>
         </div>
       </nav>
+
+      {/* Logout Button - Added at the bottom */}
+      <div className="p-4 border-t">
+        <button
+          onClick={onLogout}
+          className="w-full text-left px-4 py-3 rounded-lg transition-all text-gray-700 hover:bg-red-50 hover:text-red-700 flex items-center"
+        >
+          <span className="mr-3">🚪</span>
+          Log Out
+        </button>
+      </div>
     </div>
   );
 };
