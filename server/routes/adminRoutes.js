@@ -1,28 +1,52 @@
+// routes/adminRoutes.js
 const express = require("express");
 const router = express.Router();
-const User = require("../models/User");
-const Application = require("../models/Application");
 
-// GET all users (students and staff)
-router.get("/users", async (req, res) => {
-  try {
-    const users = await User.find({});
-    res.json(users);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: "Failed to fetch users" });
+// Mock data for officials
+let officials = [
+  {
+    _id: "1",
+    name: "Dr. John Machayi",
+    email: "john.machayi@helsb.gov.zm",
+    role: "super_admin",
+    department: "Management",
+    createdAt: new Date()
+  },
+  {
+    _id: "2", 
+    name: "Sarah Banda",
+    email: "sarah.banda@helsb.gov.zm",
+    role: "official",
+    department: "Screening",
+    createdAt: new Date()
   }
+];
+
+// Get all officials
+router.get("/officials", (req, res) => {
+  res.json(officials);
 });
 
-// GET all applications
-router.get("/applications", async (req, res) => {
-  try {
-    const applications = await Application.find({});
-    res.json(applications);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: "Failed to fetch applications" });
-  }
+// Add new official
+router.post("/officials", (req, res) => {
+  const { name, email, role, department } = req.body;
+  const newOfficial = {
+    _id: Date.now().toString(),
+    name,
+    email,
+    role: role || "official",
+    department: department || "General",
+    createdAt: new Date()
+  };
+  officials.push(newOfficial);
+  res.json({ message: "Official added successfully", official: newOfficial });
+});
+
+// Delete official
+router.delete("/officials/:id", (req, res) => {
+  const { id } = req.params;
+  officials = officials.filter(official => official._id !== id);
+  res.json({ message: "Official deleted successfully" });
 });
 
 module.exports = router;

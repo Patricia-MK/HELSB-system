@@ -4,11 +4,13 @@ const multer = require("multer");
 const path = require("path");
 const fs = require("fs");
 const Upload = require("../models/Upload");
+const Agreement = require("../models/Agreement");
 
 // Ensure uploads folder exists
 const uploadDir = path.join(__dirname, "..", "uploads");
 if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir);
 
+// Multer storage
 const storage = multer.diskStorage({
   destination: (_, __, cb) => cb(null, uploadDir),
   filename: (_, file, cb) => cb(null, Date.now() + "-" + file.originalname),
@@ -24,7 +26,7 @@ const upload = multer({
   },
 });
 
-// POST /api/upload/documents
+// Upload documents - SIMPLIFIED VERSION
 router.post(
   "/documents",
   upload.fields([
@@ -40,79 +42,90 @@ router.post(
   ]),
   async (req, res) => {
     try {
-      console.log("📁 Upload request received");
-      console.log("Body:", req.body);
-      console.log("Files:", req.files);
-
       const { studentId, loanType } = req.body;
-      if (!studentId) {
-        return res.status(400).json({ 
-          status: "error", 
-          message: "Missing studentId." 
-        });
-      }
+      console.log("=== UPLOAD DEBUG ===");
+      console.log("Upload schema paths:", Object.keys(Upload.schema.paths));
       
-      if (!loanType) {
-        return res.status(400).json({ 
-          status: "error", 
-          message: "Missing loanType." 
-        });
+      console.log("Uploading for studentId:", studentId);
+      
+      if (!studentId) {
+        return res.status(400).json({ message: "Missing studentId" });
       }
+
+      // Find the agreement
+      const agreement = await Agreement.findById(studentId);
+      if (!agreement) {
+        console.log("No agreement found for ID:", studentId);
+        return res.status(404).json({ message: "Agreement not found. Please submit agreement form first." });
+      }
+
+      console.log("Found agreement for:", agreement.studentNumber);
 
       const docs = {};
-      if (req.files) {
-        for (const key in req.files) {
-          if (req.files[key] && req.files[key][0]) {
-            docs[key] = `/uploads/${req.files[key][0].filename}`;
-          }
+      for (const key in req.files) {
+        if (req.files[key] && req.files[key][0]) {
+          docs[key] = `/uploads/${req.files[key][0].filename}`;
         }
       }
 
-      console.log("Processed documents:", docs);
-
-      let existing = await Upload.findOne({ studentId });
-      if (existing) {
-        existing.documents = { ...existing.documents, ...docs };
-        existing.loanType = loanType;
-        await existing.save();
-        return res.json({ 
-          status: "success", 
-          message: "Documents updated successfully", 
-          upload: existing 
+      // Simple create/update without studentNumber
+      let uploadRecord = await Upload.findOne({ studentId: studentId });
+      
+      if (uploadRecord) {
+        uploadRecord.documents = { ...uploadRecord.documents, ...docs };
+        uploadRecord.loanType = loanType;
+        await uploadRecord.save();
+      } else {
+        uploadRecord = new Upload({ 
+          studentId: studentId,
+          loanType: loanType,
+          documents: docs
         });
+        await uploadRecord.save();
       }
 
-      const uploadRecord = new Upload({ studentId, loanType, documents: docs });
-      await uploadRecord.save();
-      
-      console.log("✅ Upload saved successfully");
-      
+      console.log("Documents saved successfully");
       res.json({ 
-        status: "success", 
-        message: "Documents uploaded successfully", 
+        message: "Documents saved successfully", 
         upload: uploadRecord 
       });
-      
+
     } catch (err) {
-      console.error("❌ Upload error:", err);
-      res.status(500).json({ 
-        status: "error", 
-        message: "Server error uploading documents: " + err.message 
-      });
+      console.error("Upload error:", err);
+      
+      // More detailed error information
+      if (err.name === 'ValidationError') {
+        console.log("Validation errors:", err.errors);
+        return res.status(400).json({ 
+          message: "Validation error: " + Object.keys(err.errors).join(', ') 
+        });
+      }
+      
+      res.status(500).json({ message: "Server error uploading documents" });
     }
   }
 );
 
-// GET /api/upload/:studentId
-router.get("/:studentId", async (req, res) => {
+// Fetch by studentNumber
+router.get("/student-number/:studentNumber", async (req, res) => {
   try {
-    const upload = await Upload.findOne({ studentId: req.params.studentId });
-    if (!upload) return res.json({ documents: {} }); // Return empty object instead of 404
+    const { studentNumber } = req.params;
+
+    const agreement = await Agreement.findOne({ studentNumber });
+    if (!agreement) {
+      return res.status(404).json({ message: "Student not found in agreements." });
+    }
     
+    const upload = await Upload.findOne({ studentId: agreement._id.toString() });
+
+    if (!upload || !upload.documents || Object.keys(upload.documents).length === 0) {
+      return res.status(404).json({ message: "No uploaded documents found for this student." });
+    }
+
     res.json(upload.documents || {});
   } catch (err) {
-    console.error("Fetch error:", err);
-    res.status(500).json({ message: "Error fetching documents" });
+    console.error("Error fetching uploads:", err);
+    res.status(500).json({ message: "Server error fetching documents." });
   }
 });
 

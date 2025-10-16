@@ -1,32 +1,33 @@
+// server/routes/officialRoutes.js
 const express = require("express");
 const router = express.Router();
-const Application = require("../models/Application");
+const Agreement = require("../models/Agreement");
 
-// GET all applications (official can see submitted applications)
+// GET all agreements for official dashboard
 router.get("/", async (req, res) => {
   try {
-    const applications = await Application.find({});
-    res.json(applications);
+    const agreements = await Agreement.find().sort({ date: -1 });
+    res.status(200).json(agreements);
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: "Failed to fetch applications" });
+    res.status(500).json({ message: "Failed to fetch agreements" });
   }
 });
 
-// PATCH update application status (approve/reject/request info)
-router.patch("/:id/status", async (req, res) => {
-  const { status } = req.body;
+// PUT update agreement status (approve/reject)
+router.put("/:id/status", async (req, res) => {
   try {
-    const updatedApp = await Application.findByIdAndUpdate(
+    const { status } = req.body;
+    const updatedAgreement = await Agreement.findByIdAndUpdate(
       req.params.id,
       { status },
       { new: true }
     );
-    if (!updatedApp) return res.status(404).json({ message: "Application not found" });
-    res.json(updatedApp);
+    if (!updatedAgreement) return res.status(404).json({ message: "Agreement not found" });
+    res.status(200).json(updatedAgreement);
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: "Failed to update application status" });
+    res.status(500).json({ message: "Failed to update agreement status" });
   }
 });
 

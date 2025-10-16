@@ -105,12 +105,12 @@ const UploadReturning = () => {
   };
 
   const documentRequirements = [
-    { name: "confirmationSlip", label: "📄 Confirmation Slip", required: true },
-    { name: "paymentHistory", label: "💳 Payment History", required: true },
-    { name: "results", label: "📘 Academic Results", required: true },
-    { name: "proofOfPayment", label: "🧾 Proof of Payment", required: true },
-    { name: "nrc", label: "🪪 Your NRC", required: true },
-    { name: "bankStatement", label: "🏦 Bank Statement", required: true }
+    { name: "confirmationSlip", label: " Confirmation Slip", required: true },
+    { name: "paymentHistory", label: "Payment History", required: true },
+    { name: "results", label: "Academic Results", required: true },
+    { name: "proofOfPayment", label: " Proof of Payment", required: true },
+    { name: "nrc", label: "Your NRC", required: true },
+    { name: "bankStatement", label: "Bank Statement", required: true }
   ];
 
   const getStatusIcon = (status) => {
@@ -167,11 +167,11 @@ const UploadReturning = () => {
                     Uploading Documents...
                   </>
                 ) : (
-                  "🚀 Submit All Documents"
+                  " Submit All Documents"
                 )}
               </button>
               <p className="upload-note">
-                📝 Your documents will be verified for continued loan eligibility
+                Your documents will be verified for continued loan eligibility
               </p>
             </div>
           </form>

@@ -14,7 +14,12 @@ const officialRoutes = require("./routes/officialRoutes");
 const adminRoutes = require("./routes/adminRoutes");
 
 
-const studentProfileRoutes = require("./routes/studentProfile"); // ADD THIS LINE
+
+//const studentProfileRoutes = require("./routes/studentProfile"); // ADD THIS LINE
+
+const studentProfileRoutes = require("./routes/studentProfile");
+const notificationRoutes = require("./routes/notifications");
+
 
 //73bdc2eff0f46d9fc07efa597db44a228d25b209
 // studapp routes
@@ -31,7 +36,10 @@ const loanApplicationRoutes = require("./routes/loanApplicationRoutes");
 const app = express();
 
 // Middleware
-app.use(cors());
+app.use(cors({
+  origin: "http://localhost:3000",
+  credentials: true
+}));
 app.use(express.json());
 
 // Static folder for uploaded files
@@ -44,7 +52,8 @@ app.use("/api/upload", uploadRoutes);
 app.use("/api/applications", applicationRoutes);
 app.use("/api/official", officialRoutes);
 app.use("/api/admin", adminRoutes);
-app.use("/api/student", studentProfileRoutes); // ADD THIS LINE
+app.use("/api/student", studentProfileRoutes);
+app.use("/api/notifications", notificationRoutes);
 
 // studapp
 app.use("/api/studapp/registration", studappRegistrationRoutes);
@@ -59,9 +68,11 @@ mongoose.connect("mongodb://127.0.0.1:27017/helsb_db", {
   useNewUrlParser: true,
   useUnifiedTopology: true,
 })
-.then(() => console.log(" MongoDB connected"))
-.catch((err) => console.error(" MongoDB connection error:", err));
+.then(() => console.log("MongoDB connected"))
+.catch((err) => console.error("MongoDB connection error:", err));
 
 // Start server
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(` Server running on port ${PORT}`));
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+
