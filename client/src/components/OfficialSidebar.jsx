@@ -1,54 +1,50 @@
 // src/components/OfficialSidebar.jsx
 import React from "react";
+import "./OfficialSidebar.css";
+import helsbLogo from "../assets/images/helsblogo.jpg"; // Adjust path as needed
 
 const OfficialSidebar = ({ activeTab, setActiveTab, onLogout }) => {
   const menuItems = [
-    { id: "My Assignments", label: "📋 My Assignments", icon: "📋" },
-    { id: "All Applications", label: "📄 All Applications", icon: "📄" },
-    { id: "Performance", label: "📊 My Performance", icon: "📊" },
+    { id: "My Assignments", label: "Screened Students", icon: "📋" },
+    { id: "All Applications", label: "All Students", icon: "👥" },
+    // Removed "My Performance" item
   ];
 
   return (
-    <div className="w-64 bg-white shadow-lg flex flex-col h-screen">
-      <div className="p-6 border-b">
-        <h2 className="text-xl font-bold text-gray-800">HELSB Official</h2>
-        <p className="text-sm text-gray-600">Screening Department</p>
+    <div className="official-sidebar">
+      {/* Logo Section - Matching Student Dashboard */}
+      <div className="logo-section">
+        <img src={helsbLogo} alt="HELSB Logo" className="helsb-logo" />
+        <div className="logo-text">
+          <h2>HELSB Portal</h2>
+          <p>Official Dashboard</p>
+        </div>
       </div>
       
-      <nav className="p-4 flex-1">
-        <ul className="space-y-2">
-          {menuItems.map((item) => (
-            <li key={item.id}>
-              <button
-                onClick={() => setActiveTab(item.id)}
-                className={`w-full text-left px-4 py-3 rounded-lg transition-all ${
-                  activeTab === item.id
-                    ? "bg-green-500 text-white shadow-md"
-                    : "text-gray-700 hover:bg-gray-100"
-                }`}
-              >
-                <span className="mr-3">{item.icon}</span>
-                {item.label}
-              </button>
-            </li>
-          ))}
-        </ul>
-        
-        {/* Official Badge */}
-        <div className="mt-8 p-4 bg-green-50 rounded-lg border border-green-200">
-          <div className="text-sm font-medium text-green-800">HELSB Official</div>
-          <div className="text-xs text-green-600">Screening & Verification</div>
-        </div>
+      <nav className="sidebar-nav">
+        {menuItems.map((item) => (
+          <button
+            key={item.id}
+            onClick={() => setActiveTab(item.id)}
+            className={`sidebar-nav-item ${activeTab === item.id ? 'active' : ''}`}
+          >
+            <span className="nav-icon">{item.icon}</span>
+            <span className="nav-label">{item.label}</span>
+          </button>
+        ))}
       </nav>
+      
+      {/* Official Badge */}
+      <div className="official-badge">
+        <div className="badge-title">HELSB Official</div>
+        <div className="badge-subtitle">Screening & Verification</div>
+      </div>
 
-      {/* Logout Button - Added at the bottom */}
-      <div className="p-4 border-t">
-        <button
-          onClick={onLogout}
-          className="w-full text-left px-4 py-3 rounded-lg transition-all text-gray-700 hover:bg-red-50 hover:text-red-700 flex items-center"
-        >
-          <span className="mr-3">🚪</span>
-          Log Out
+      {/* Logout Button */}
+      <div className="sidebar-footer">
+        <button onClick={onLogout} className="logout-btn">
+          <span className="logout-icon">🚪</span>
+          <span>Log Out</span>
         </button>
       </div>
     </div>

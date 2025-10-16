@@ -1,11 +1,13 @@
 import React, { useState } from "react";
 import "./UploadDocuments.css";
 import capBg from "../assets/images/cap.jpg";
+import SuccessAnimation from "../components/SuccessAnimation";
 
 const UploadReturning = () => {
   const [files, setFiles] = useState({});
   const [submitting, setSubmitting] = useState(false);
   const [uploadProgress, setUploadProgress] = useState({});
+  const [showSuccess, setShowSuccess] = useState(false);
 
   const handleFileChange = (e) => {
     const { name, files: fileList } = e.target;
@@ -83,12 +85,9 @@ const UploadReturning = () => {
           setUploadProgress(prev => ({ ...prev, [key]: 'completed' }));
         });
         
-        setTimeout(() => {
-          alert("🎉 " + data.message);
-          // Trigger profile refresh
-          window.dispatchEvent(new Event('profileRefresh'));
-          window.location.href = "/student-dashboard";
-        }, 1000);
+        // Show success animation instead of alert
+        setShowSuccess(true);
+        
       } else {
         throw new Error(data.message || "Upload failed");
       }
@@ -102,6 +101,13 @@ const UploadReturning = () => {
       });
       setSubmitting(false);
     }
+  };
+
+  const handleSuccessClose = () => {
+    setShowSuccess(false);
+    // Trigger profile refresh and redirect
+    window.dispatchEvent(new Event('profileRefresh'));
+    window.location.href = "/student-dashboard";
   };
 
   const documentRequirements = [
@@ -177,6 +183,14 @@ const UploadReturning = () => {
           </form>
         </main>
       </div>
+
+      {/* Success Animation */}
+      <SuccessAnimation 
+        show={showSuccess}
+        message="Screening complete!"
+        subMessage="Go to profile to verify uploaded documents and details"
+        onClose={handleSuccessClose}
+      />
     </div>
   );
 };

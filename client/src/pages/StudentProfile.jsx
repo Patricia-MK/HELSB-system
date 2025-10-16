@@ -5,6 +5,7 @@ const StudentProfile = ({ closeProfile, onCloseRefresh }) => {
   const [student, setStudent] = useState(null);
   const [documents, setDocuments] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [requiredUploads, setRequiredUploads] = useState([]); // NEW: Track required uploads
   const [loanInfo, setLoanInfo] = useState({
     outstandingBalance: 0,
     currentYearAllocation: {
@@ -35,6 +36,7 @@ const StudentProfile = ({ closeProfile, onCloseRefresh }) => {
             // Fetch documents if student has ID
             if (userData._id) {
               fetchDocuments(userData._id);
+              fetchRequiredUploads(userData._id); // NEW: Fetch required uploads
             } else {
               setLoading(false);
             }
@@ -56,6 +58,27 @@ const StudentProfile = ({ closeProfile, onCloseRefresh }) => {
 
     loadStudentData();
   }, []);
+
+  // NEW: Fetch required uploads based on student type
+  const fetchRequiredUploads = async (studentId) => {
+    try {
+      console.log("🔍 Fetching required uploads for student:", studentId);
+      const response = await fetch(`http://localhost:5000/api/student/uploads/${studentId}`);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      console.log("✅ Required uploads received:", data.uploads);
+      console.log("🎓 Student type:", data.studentType);
+      
+      setRequiredUploads(data.uploads || []);
+    } catch (error) {
+      console.error("❌ Error fetching required uploads:", error);
+      setRequiredUploads([]);
+    }
+  };
 
   // Calculate loan information
   const calculateLoanInfo = (studentData) => {
@@ -114,13 +137,59 @@ const StudentProfile = ({ closeProfile, onCloseRefresh }) => {
     closeProfile();
   };
 
+  // Handle resubmit documents
+  const handleResubmitDocuments = () => {
+    // Close profile modal
+    closeProfile();
+    
+    // Navigate to upload page after a short delay
+    setTimeout(() => {
+      // Get student data to determine if first-timer or returning
+      const storedUser = localStorage.getItem("user");
+      if (storedUser) {
+        const userData = JSON.parse(storedUser);
+        const isFirstTimer = userData.year === 1;
+        
+        if (isFirstTimer) {
+          window.location.href = "/upload-first-timer";
+        } else {
+          window.location.href = "/upload-returning";
+        }
+      } else {
+        // Fallback to first-timer if user data not available
+        window.location.href = "/upload-first-timer";
+      }
+    }, 300);
+  };
+
   const getStatus = () => {
     if (documents.length > 0) return { text: "Screening Completed", color: "#28a745" };
     if (student) return { text: "Ready for Screening", color: "#f39c12" };
     return { text: "Not Started", color: "#e74c3c" };
   };
 
+  // NEW: Calculate progress based on required uploads vs uploaded documents
+  const getProgressInfo = () => {
+    if (requiredUploads.length === 0) return { completed: 0, total: 0, percentage: 0 };
+    
+    const uploadedDocNames = documents.map(doc => 
+      doc.name.toLowerCase().replace(/ /g, '')
+    );
+    
+    const completed = requiredUploads.filter(upload => 
+      uploadedDocNames.some(docName => 
+        docName.includes(upload.toLowerCase().replace(/ /g, ''))
+      )
+    ).length;
+    
+    const total = requiredUploads.length;
+    const percentage = total > 0 ? Math.round((completed / total) * 100) : 0;
+    
+    return { completed, total, percentage };
+  };
+
   const status = getStatus();
+  const progress = getProgressInfo(); // NEW: Progress information
 
   if (loading) {
     return (
@@ -175,6 +244,9 @@ const StudentProfile = ({ closeProfile, onCloseRefresh }) => {
                   <div className="detail-item">
                     <strong>NRC:</strong> {student.nrcNo}
                   </div>
+                  <div className="detail-item">
+                    <strong>Student Type:</strong> {student.studentType === 'firstYear' ? 'First Year' : 'Returning Student'}
+                  </div>
                 </div>
 
                 <div className="detail-section">
@@ -223,11 +295,29 @@ const StudentProfile = ({ closeProfile, onCloseRefresh }) => {
                 <h4>No Documents Uploaded</h4>
                 <p>You haven't uploaded any documents yet.</p>
                 <small>Complete the screening process to upload your documents.</small>
+                
+                {/* NEW: Show required uploads list */}
+                {requiredUploads.length > 0 && (
+                  <div className="required-uploads">
+                    <h5>Required Documents:</h5>
+                    <ul>
+                      {requiredUploads.map((upload, index) => (
+                        <li key={index}>• {upload.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
               </div>
             ) : (
               <div className="documents-list">
                 <div className="documents-header">
                   <h4>Uploaded Documents ({documents.length})</h4>
+                  <button 
+                    className="resubmit-btn"
+                    onClick={handleResubmitDocuments}
+                  >
+                    📎 Resubmit Documents
+                  </button>
                 </div>
                 {documents.map((doc, idx) => (
                   <div key={idx} className="document-item">
@@ -240,6 +330,9 @@ const StudentProfile = ({ closeProfile, onCloseRefresh }) => {
                     </a>
                   </div>
                 ))}
+                <div className="resubmit-note">
+                  <p>📝 <strong>Need to update your documents?</strong> Click "Resubmit Documents" to upload new versions. Your previous documents will be replaced.</p>
+                </div>
               </div>
             )}
           </div>

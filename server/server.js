@@ -15,15 +15,6 @@ const adminRoutes = require("./routes/adminRoutes");
 const studentProfileRoutes = require("./routes/studentProfile");
 const notificationRoutes = require("./routes/notifications");
 
-
-
-
-//const studentProfileRoutes = require("./routes/studentProfile"); // ADD THIS LINE
-
-const studentProfileRoutes = require("./routes/studentProfile");
-const notificationRoutes = require("./routes/notifications");
-
-
 //73bdc2eff0f46d9fc07efa597db44a228d25b209
 // studapp routes
 const studappRegistrationRoutes = require("./routes/studapp-registration");
@@ -34,19 +25,47 @@ const studappAcademicsRoutes = require("./routes/studapp-academics");
 // loan application routes
 const loanApplicationRoutes = require("./routes/loanApplicationRoutes");
 
-
-
 const app = express();
 
-// Middleware
+// Middleware - UPDATED CORS for file access
 app.use(cors({
   origin: "http://localhost:3000",
-  credentials: true
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
 }));
 app.use(express.json());
+//  CSP MIDDLEWARE 
+app.use((req, res, next) => {
+  res.setHeader(
+    'Content-Security-Policy',
+    "default-src 'self' http://localhost:3000; " +
+    "connect-src 'self' http://localhost:5000 http://localhost:3000; " +
+    "script-src 'self' 'unsafe-inline'; " +
+    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; " +
+    "font-src 'self' https://fonts.gstatic.com; " +
+    "img-src 'self' data: http://localhost:5000 blob:;"
+  );
+  next();
+});
 
-// Static folder for uploaded files
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+app.use(express.json());
+
+// Static folder for uploaded files - MAKE SURE THIS IS CORRECT
+app.use("/uploads", express.static(path.join(__dirname, "uploads"), {
+  setHeaders: (res, path) => {
+    // Set proper headers for PDF files and images
+    if (path.endsWith('.pdf')) {
+      res.set('Content-Type', 'application/pdf');
+    } else if (path.endsWith('.jpg') || path.endsWith('.jpeg')) {
+      res.set('Content-Type', 'image/jpeg');
+    } else if (path.endsWith('.png')) {
+      res.set('Content-Type', 'image/png');
+    }
+    // Allow cross-origin access to files
+    res.set('Access-Control-Allow-Origin', '*');
+  }
+}));
 
 // Routes
 app.use("/api/auth", authRoutes);
@@ -77,4 +96,3 @@ mongoose.connect("mongodb://127.0.0.1:27017/helsb_db", {
 // Start server
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(` Server running on port ${PORT}`));
-

@@ -105,12 +105,94 @@ router.post("/documents",
   }
 );
 
-// Get uploads by student number
-router.get("/student-id:studentId", async (req, res) => {
+// ✅ NEW ROUTE: Get uploads by student ID (for StudentProfile component)
+router.get("/student/:studentId", async (req, res) => {
+  try {
+    const { studentId } = req.params;
+    console.log("🔍 Fetching uploads for student ID:", studentId);
+    
+    if (!studentId || studentId === 'undefined') {
+      console.log("❌ Student ID is undefined");
+      return res.status(400).json({ 
+        message: "Student ID is required",
+        uploads: [] 
+      });
+    }
+
+    // Find the user first to get student info
+    const user = await User.findById(studentId);
+    if (!user) {
+      console.log("❌ User not found with ID:", studentId);
+      return res.status(404).json({ 
+        message: "Student not found",
+        uploads: [] 
+      });
+    }
+
+    console.log("✅ Found student:", user.fullName, "Type:", user.studentType);
+
+    // Determine required uploads based on student type
+    let requiredUploads = [];
+    
+    if (user.studentType === 'firstYear' || user.studentType === 'first-timer') {
+      // First years need more documents
+      requiredUploads = [
+        'confirmationSlip',
+        'paymentHistory', 
+        'proofOfPayment',
+        'nrc',
+        'passportPhotos',
+        'grade12Results',
+        'guardianNrc',
+        'bankStatement'
+      ];
+      console.log("🎓 First year student - more documents required");
+    } else {
+      // Returning students need fewer documents
+      requiredUploads = [
+        'confirmationSlip',
+        'paymentHistory',
+        'results', // academic results from previous years
+        'proofOfPayment',
+        'nrc',
+        'passportPhotos'
+      ];
+      console.log("📚 Returning student - standard documents required");
+    }
+
+    // Find existing uploads
+    const uploadRecord = await Upload.findOne({ studentId: studentId });
+    const existingUploads = uploadRecord?.documents ? Object.keys(uploadRecord.documents) : [];
+    
+    console.log("✅ Required uploads:", requiredUploads);
+    console.log("✅ Existing uploads:", existingUploads);
+
+    res.json({ 
+      uploads: requiredUploads,
+      existingUploads: existingUploads,
+      studentType: user.studentType,
+      studentName: user.fullName
+    });
+    
+  } catch (err) {
+    console.error("❌ Error fetching uploads by student ID:", err);
+    res.status(500).json({ 
+      message: "Server error fetching upload requirements.",
+      uploads: [] 
+    });
+  }
+});
+
+// Get uploads by student number - EXISTING ROUTE (keep this for OfficialDashboard)
+router.get("/student-id:studentNumber", async (req, res) => {
   try {
     const { studentNumber } = req.params;
     console.log("🔍 Fetching uploads for student:", studentNumber);
     
+    if (!studentNumber) {
+      return res.status(400).json({ message: "Student number is required" });
+    }
+
     // Find upload by studentNumber
     const upload = await Upload.findOne({ studentNumber: studentNumber });
     
@@ -125,6 +207,8 @@ router.get("/student-id:studentId", async (req, res) => {
     }
 
     console.log("✅ Found uploads:", Object.keys(upload.documents));
+    
+    // Return the documents object directly for compatibility
     res.json(upload.documents);
     
   } catch (err) {

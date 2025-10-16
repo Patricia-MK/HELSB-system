@@ -1,12 +1,12 @@
 import React, { useEffect } from "react";
 import "./SuccessAnimation.css";
 
-const SuccessAnimation = ({ show, message, onClose }) => {
+const SuccessAnimation = ({ show, message, subMessage, onClose }) => {
   useEffect(() => {
     if (show) {
       const timer = setTimeout(() => {
         if (onClose) onClose();
-      }, 3000);
+      }, 5000); // Increased to 5 seconds to allow reading both messages
       
       return () => clearTimeout(timer);
     }
@@ -20,15 +20,15 @@ const SuccessAnimation = ({ show, message, onClose }) => {
         <div className="success-icon">
           <div className="checkmark">✓</div>
         </div>
-        <h3 className="success-title">Success!</h3>
-        <p className="success-message">{message}</p>
+        <h3 className="success-title">{message || "Success!"}</h3>
+        <p className="success-message">{subMessage || "Your action was completed successfully."}</p>
         <div className="confetti">
           {[...Array(50)].map((_, i) => (
             <div key={i} className="confetti-piece"></div>
           ))}
         </div>
         <button className="success-close-btn" onClick={onClose}>
-          Continue
+          Continue to Dashboard
         </button>
       </div>
     </div>

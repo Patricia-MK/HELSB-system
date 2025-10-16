@@ -17,6 +17,39 @@ router.get("/email/:email", async (req, res) => {
   }
 });
 
+// ✅ NEW ROUTE: Get required uploads for student by ID
+router.get("/uploads/:studentId", async (req, res) => {
+  try {
+    const { studentId } = req.params;
+    console.log("🔍 StudentProfile: Fetching uploads for student ID:", studentId);
+    
+    if (!studentId || studentId === 'undefined') {
+      return res.status(400).json({ 
+        message: "Valid student ID is required",
+        uploads: [] 
+      });
+    }
+
+    // Use the new upload route we created
+    const response = await fetch(`http://localhost:5000/api/upload/student/${studentId}`);
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    const data = await response.json();
+    console.log("✅ StudentProfile: Received uploads data:", data);
+    
+    res.json(data);
+  } catch (error) {
+    console.error("❌ StudentProfile: Error fetching uploads:", error);
+    res.status(500).json({ 
+      message: "Server error fetching upload requirements",
+      uploads: [] 
+    });
+  }
+});
+
 // Get student documents by student ID - FIXED VERSION
 router.get("/documents/:studentId", async (req, res) => {
   try {

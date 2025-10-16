@@ -5,6 +5,10 @@ const uploadSchema = new mongoose.Schema({
     type: String, 
     required: true 
   },
+  studentNumber: {
+    type: String,
+    required: true
+  },
   loanType: { 
     type: String, 
     enum: ["first-timer", "returning"], 
@@ -26,10 +30,5 @@ const uploadSchema = new mongoose.Schema({
     default: Date.now 
   },
 });
-
-// Explicitly remove studentNumber if it exists
-if (uploadSchema.paths.studentNumber) {
-  delete uploadSchema.paths.studentNumber;
-}
 
 module.exports = mongoose.model("Upload", uploadSchema);
