@@ -1,3 +1,4 @@
+// server/seed.js
 const mongoose = require("mongoose");
 const User = require("./models/User");
 const bcrypt = require("bcryptjs");
@@ -26,10 +27,10 @@ const seedUsers = async () => {
     
 
     // Supervisor
-    { fullName: "Alice Supervisor", email: "alice.supervisor@gmail.com", password: "supervisor123", role: "supervisor" },
+    { fullName: "Alice Supervisor", email: "alice.supervisor@helsb.gov.zm", password: "supervisor123", role: "supervisor" },
 
     // Official
-    { fullName: "Bob Official", email: "bob.official@gmail.com", password: "official123", role: "official" },
+    { fullName: "Bob Official", email: "bob.official@helsb.gov.zm", password: "official123", role: "official" },
   ];
 
   // Hash passwords
@@ -40,6 +41,9 @@ const seedUsers = async () => {
 
   await User.insertMany(users);
   console.log("Users seeded!");
+  console.log("- Students: " + users.filter(u => u.role === "student").length);
+  console.log("- Officials: " + users.filter(u => u.role === "official").length);
+  console.log("- Supervisors: " + users.filter(u => u.role === "supervisor").length);
   mongoose.disconnect();
 };
 

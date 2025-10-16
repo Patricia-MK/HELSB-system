@@ -15,6 +15,10 @@ const adminRoutes = require("./routes/adminRoutes");
 const studentProfileRoutes = require("./routes/studentProfile");
 const notificationRoutes = require("./routes/notifications");
 
+<<<<<<< Updated upstream
+=======
+
+>>>>>>> Stashed changes
 //73bdc2eff0f46d9fc07efa597db44a228d25b209
 // studapp routes
 const studappRegistrationRoutes = require("./routes/studapp-registration");
@@ -72,7 +76,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/agreements", agreementRoutes);
 app.use("/api/upload", uploadRoutes);
 app.use("/api/applications", applicationRoutes);
-app.use("/api/official", officialRoutes);
+app.use("/api/official/agreements", officialRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/student", studentProfileRoutes);
 app.use("/api/notifications", notificationRoutes);

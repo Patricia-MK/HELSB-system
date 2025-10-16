@@ -1,52 +1,97 @@
-// routes/adminRoutes.js
+// server/routes/adminRoutes.js
 const express = require("express");
 const router = express.Router();
+const User = require("../models/User");
 
-// Mock data for officials
-let officials = [
-  {
-    _id: "1",
-    name: "Dr. John Machayi",
-    email: "john.machayi@helsb.gov.zm",
-    role: "super_admin",
-    department: "Management",
-    createdAt: new Date()
-  },
-  {
-    _id: "2", 
-    name: "Sarah Banda",
-    email: "sarah.banda@helsb.gov.zm",
-    role: "official",
-    department: "Screening",
-    createdAt: new Date()
+// Middleware to check if user is supervisor
+const isSupervisor = (req, res, next) => {
+  // In real implementation, you'd check from JWT token or session
+  next();
+};
+
+// Get dashboard statistics (Supervisor only)
+router.get("/dashboard", isSupervisor, async (req, res) => {
+  try {
+    const totalStudents = await User.countDocuments({ role: "student" });
+    const totalOfficials = await User.countDocuments({ role: "official" });
+    const totalSupervisors = await User.countDocuments({ role: "supervisor" });
+    const totalUsers = totalStudents + totalOfficials + totalSupervisors;
+
+    res.json({
+      totalUsers,
+      totalStudents,
+      totalOfficials,
+      totalSupervisors
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
   }
-];
-
-// Get all officials
-router.get("/officials", (req, res) => {
-  res.json(officials);
 });
 
-// Add new official
-router.post("/officials", (req, res) => {
-  const { name, email, role, department } = req.body;
-  const newOfficial = {
-    _id: Date.now().toString(),
-    name,
-    email,
-    role: role || "official",
-    department: department || "General",
-    createdAt: new Date()
-  };
-  officials.push(newOfficial);
-  res.json({ message: "Official added successfully", official: newOfficial });
+// Get all officials (for management)
+router.get("/officials", isSupervisor, async (req, res) => {
+  try {
+    const officials = await User.find({ role: "official" }).select("-password");
+    res.json(officials);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
 });
 
-// Delete official
-router.delete("/officials/:id", (req, res) => {
-  const { id } = req.params;
-  officials = officials.filter(official => official._id !== id);
-  res.json({ message: "Official deleted successfully" });
+// Add new official (Supervisor only)
+router.post("/officials", isSupervisor, async (req, res) => {
+  try {
+    const { fullName, email, password } = req.body;
+
+    // Validate HELSB email domain
+    if (!email.endsWith('@helsb.gov.zm')) {
+      return res.status(400).json({ 
+        message: "Officials must use @helsb.gov.zm email domain" 
+      });
+    }
+
+    // Check if official already exists
+    const existingOfficial = await User.findOne({ email });
+    if (existingOfficial) {
+      return res.status(400).json({ message: "Official already exists" });
+    }
+
+    // Create new official
+    const official = new User({
+      fullName,
+      email,
+      password,
+      role: "official"
+    });
+
+    await official.save();
+
+    // Return without password
+    const officialResponse = official.toObject();
+    delete officialResponse.password;
+
+    res.status(201).json(officialResponse);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// Delete official (Supervisor only)
+router.delete("/officials/:id", isSupervisor, async (req, res) => {
+  try {
+    const official = await User.findOneAndDelete({ 
+      _id: req.params.id, 
+      role: "official" 
+    });
+    
+    if (!official) {
+      return res.status(404).json({ message: "Official not found" });
+    }
+    
+    res.json({ message: "Official deleted successfully" });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
 });
 
 module.exports = router;
