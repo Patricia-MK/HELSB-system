@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const bcrypt = require("bcryptjs"); // ADD THIS
 
 const userSchema = new mongoose.Schema({
   fullName: { type: String, required: true },
@@ -17,6 +18,23 @@ const userSchema = new mongoose.Schema({
     totalDisbursed: { type: Number, default: 0 },
     totalRepaid: { type: Number, default: 0 },
     remainingBalance: { type: Number, default: 0 }
+  }
+}, {
+  timestamps: true // ADD THIS TOO
+});
+
+// ADD THIS PASSWORD HASHING MIDDLEWARE
+userSchema.pre('save', async function(next) {
+  // Only hash the password if it has been modified (or is new)
+  if (!this.isModified('password')) return next();
+  
+  try {
+    // Hash password with salt rounds
+    const salt = await bcrypt.genSalt(10);
+    this.password = await bcrypt.hash(this.password, salt);
+    next();
+  } catch (error) {
+    next(error);
   }
 });
 

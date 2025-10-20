@@ -56,22 +56,28 @@ router.post("/officials", isSupervisor, async (req, res) => {
       return res.status(400).json({ message: "Official already exists" });
     }
 
-    // Create new official
+    // Create new official - User model will automatically hash the password
     const official = new User({
       fullName,
       email,
-      password,
+      password, // Just pass plain password - User model will hash it
       role: "official"
     });
 
     await official.save();
 
     // Return without password
-    const officialResponse = official.toObject();
-    delete officialResponse.password;
+    const officialResponse = {
+      _id: official._id,
+      fullName: official.fullName,
+      email: official.email,
+      role: official.role,
+      createdAt: official.createdAt
+    };
 
     res.status(201).json(officialResponse);
   } catch (error) {
+    console.error("Add official error:", error);
     res.status(500).json({ message: error.message });
   }
 });

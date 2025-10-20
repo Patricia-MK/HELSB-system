@@ -4,7 +4,7 @@ import axios from "axios";
 import AdminSidebar from "../components/AdminSidebar";
 import Swal from "sweetalert2";
 import UserManagement from "../components/UserManagement";
-import SystemActivity from "../components/SystemActivity";
+import "./AdminDashboard.css";
 
 const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState("Dashboard");
@@ -194,59 +194,55 @@ const AdminDashboard = () => {
   const agreementRejectedCount = agreements.filter(agr => agr.status === "Rejected").length;
 
   return (
-    <div className="flex min-h-screen bg-gray-100">
+    <div className="admin-dashboard">
       <AdminSidebar activeTab={activeTab} setActiveTab={setActiveTab} />
 
-      <div className="flex-1 ml-64 p-6">
-        <h2 className="text-2xl font-semibold mb-6 text-gray-700">
-          HELSB Admin Dashboard
-        </h2>
+      <div className="dashboard-main">
+        <div className="dashboard-header">
+          <h2>HELSB Admin Dashboard</h2>
+        </div>
 
         {/* Dashboard Stats */}
         {activeTab === "Dashboard" && (
-          <div className="space-y-8">
+          <div>
             {/* Loan Applications Stats */}
-            <div>
+            <div className="content-section">
               <h3 className="text-lg font-semibold mb-4 text-gray-800">Loan Applications Overview</h3>
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
-                <div className="bg-white rounded-lg shadow-md p-6 border-l-4 border-blue-500">
-                  <h4 className="text-gray-500">Total Loan Applications</h4>
-                  <p className="text-3xl font-bold">{loanApplications.length}</p>
+              <div className="stats-grid">
+                <div className="stat-card blue">
+                  <h4>Total Loan Applications</h4>
+                  <p className="stat-number">{loanApplications.length}</p>
                 </div>
-                <div className="bg-white rounded-lg shadow-md p-6 border-l-4 border-yellow-500">
-                  <h4 className="text-gray-500">Pending Loans</h4>
-                  <p className="text-3xl font-bold">{loanPendingCount}</p>
+                <div className="stat-card green">
+                  <h4>Approved Loans</h4>
+                  <p className="stat-number">{loanApprovedCount}</p>
                 </div>
-                <div className="bg-white rounded-lg shadow-md p-6 border-l-4 border-green-500">
-                  <h4 className="text-gray-500">Approved Loans</h4>
-                  <p className="text-3xl font-bold">{loanApprovedCount}</p>
-                </div>
-                <div className="bg-white rounded-lg shadow-md p-6 border-l-4 border-red-500">
-                  <h4 className="text-gray-500">Rejected Loans</h4>
-                  <p className="text-3xl font-bold">{loanRejectedCount}</p>
+                <div className="stat-card red">
+                  <h4>Rejected Loans</h4>
+                  <p className="stat-number">{loanRejectedCount}</p>
                 </div>
               </div>
             </div>
 
             {/* Agreements Stats */}
-            <div>
+            <div className="content-section">
               <h3 className="text-lg font-semibold mb-4 text-gray-800">Screening Agreements Overview</h3>
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                <div className="bg-white rounded-lg shadow-md p-6 border-l-4 border-purple-500">
-                  <h4 className="text-gray-500">Total Agreements</h4>
-                  <p className="text-3xl font-bold">{agreements.length}</p>
+              <div className="stats-grid">
+                <div className="stat-card purple">
+                  <h4>Total Agreements</h4>
+                  <p className="stat-number">{agreements.length}</p>
                 </div>
-                <div className="bg-white rounded-lg shadow-md p-6 border-l-4 border-yellow-500">
-                  <h4 className="text-gray-500">Pending Agreements</h4>
-                  <p className="text-3xl font-bold">{agreementPendingCount}</p>
+                <div className="stat-card yellow">
+                  <h4>Pending Agreements</h4>
+                  <p className="stat-number">{agreementPendingCount}</p>
                 </div>
-                <div className="bg-white rounded-lg shadow-md p-6 border-l-4 border-green-500">
-                  <h4 className="text-gray-500">Approved Agreements</h4>
-                  <p className="text-3xl font-bold">{agreementApprovedCount}</p>
+                <div className="stat-card green">
+                  <h4>Approved Agreements</h4>
+                  <p className="stat-number">{agreementApprovedCount}</p>
                 </div>
-                <div className="bg-white rounded-lg shadow-md p-6 border-l-4 border-red-500">
-                  <h4 className="text-gray-500">Rejected Agreements</h4>
-                  <p className="text-3xl font-bold">{agreementRejectedCount}</p>
+                <div className="stat-card red">
+                  <h4>Rejected Agreements</h4>
+                  <p className="stat-number">{agreementRejectedCount}</p>
                 </div>
               </div>
             </div>
@@ -255,23 +251,23 @@ const AdminDashboard = () => {
 
         {/* All Applications - Both Tables */}
         {activeTab === "All Applications" && (
-          <div className="space-y-8">
+          <div>
             {/* Search and Filter Controls */}
-            <div className="bg-white shadow-md rounded-lg p-6">
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="text-xl font-semibold">Application Management</h3>
-                <div className="flex gap-4">
+            <div className="content-section">
+              <div className="section-header">
+                <h3>Application Management</h3>
+                <div className="controls">
                   <input
                     type="text"
                     placeholder="Search by name, NRC, student number, university..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="p-2 border rounded w-64"
+                    className="search-input"
                   />
                   <select
                     value={filterStatus}
                     onChange={(e) => setFilterStatus(e.target.value)}
-                    className="p-2 border rounded"
+                    className="filter-select"
                   >
                     <option value="">All Statuses</option>
                     <option value="Pending">Pending</option>
@@ -281,7 +277,7 @@ const AdminDashboard = () => {
                   </select>
                   <button
                     onClick={fetchAllData}
-                    className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+                    className="btn btn-primary"
                   >
                     Refresh All
                   </button>
@@ -290,190 +286,189 @@ const AdminDashboard = () => {
             </div>
 
             {/* Loan Applications Table */}
-            <div className="bg-white shadow-md rounded-lg p-6">
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="text-lg font-semibold text-blue-700">
-                  📋 Loan Applications ({filteredLoans.length})
-                </h3>
-              </div>
+<div className="content-section">
+  <div className="section-header">
+    <h3>📋 Loan Applications ({filteredLoans.length})</h3>
+  </div>
 
-              {loading ? (
-                <div className="text-center py-8">
-                  <p className="text-gray-500">Loading loan applications...</p>
-                </div>
-              ) : filteredLoans.length === 0 ? (
-                <div className="text-center py-8">
-                  <p className="text-gray-500">No loan applications found.</p>
-                </div>
-              ) : (
-                <div className="overflow-x-auto">
-                  <table className="min-w-full text-sm text-left text-gray-700">
-                    <thead className="bg-gray-50 text-gray-600 uppercase">
-                      <tr>
-                        <th className="px-4 py-3">App Number</th>
-                        <th className="px-4 py-3">Full Name</th>
-                        <th className="px-4 py-3">NRC Number</th>
-                        <th className="px-4 py-3">Student Number</th>
-                        <th className="px-4 py-3">University</th>
-                        <th className="px-4 py-3">Program</th>
-                        <th className="px-4 py-3">Loan Rate</th>
-                        <th className="px-4 py-3">Phone</th>
-                        <th className="px-4 py-3">Status</th>
-                        <th className="px-4 py-3">Date Applied</th>
-                        <th className="px-4 py-3">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {filteredLoans.map((application) => {
-                        // Extract values using the CORRECT field names from your database
-                        const fullName = `${application.personalDetails?.firstName || ''} ${application.personalDetails?.otherName || ''} ${application.personalDetails?.surname || ''}`.trim() || "Not Provided";
-                        const nrcNumber = application.personalDetails?.nrcNumber || "Not Provided";
-                        const studentNumber = application.university?.studentNumber || "Not Provided";
-                        const university = application.university?.selectUniversity || "Not Provided";
-                        const program = application.university?.enterProgram || "Not Provided";
-                        const loanRate = application.university?.rateOfApplication ? `${application.university.rateOfApplication}%` : "Not Specified";
-                        const phoneNumber = application.personalDetails?.phoneNumber || "Not Provided";
+  {loading ? (
+    <div className="loading-state">
+      <div className="spinner"></div>
+      <p>Loading loan applications...</p>
+    </div>
+  ) : filteredLoans.length === 0 ? (
+    <div className="empty-state">
+      <div className="empty-icon">📋</div>
+      <p>No loan applications found.</p>
+    </div>
+  ) : (
+    <div className="table-container">
+      <table className="admin-table">
+        <thead>
+          <tr>
+            <th>App #</th>
+            <th>Student Name</th>
+            <th>Student No.</th>
+            <th>Program</th>
+            <th>Status</th>
+            <th>Date</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {filteredLoans.map((application) => {
+            const fullName = `${application.personalDetails?.firstName || ''} ${application.personalDetails?.otherName || ''} ${application.personalDetails?.surname || ''}`.trim() || "N/A";
+            const studentNumber = application.university?.studentNumber || "N/A";
+            const program = application.university?.enterProgram || "N/A";
 
-                        return (
-                          <tr key={application._id} className="border-t hover:bg-gray-50">
-                            <td className="px-4 py-3 font-mono text-blue-600">
-                              {application.applicationNumber || "N/A"}
-                            </td>
-                            <td className="px-4 py-3 font-medium">{fullName}</td>
-                            <td className="px-4 py-3 font-mono">{nrcNumber}</td>
-                            <td className="px-4 py-3 font-mono text-blue-600">{studentNumber}</td>
-                            <td className="px-4 py-3">{university}</td>
-                            <td className="px-4 py-3">{program}</td>
-                            <td className="px-4 py-3 font-medium">{loanRate}</td>
-                            <td className="px-4 py-3">{phoneNumber}</td>
-                            <td className="px-4 py-3">
-                              <span className={`px-2 py-1 rounded text-xs font-medium ${getStatusColor(application.status)}`}>
-                                {application.status || "Pending"}
-                              </span>
-                            </td>
-                            <td className="px-4 py-3 text-gray-600">
-                              {application.submittedAt ? formatDate(application.submittedAt) : 
-                              application.createdAt ? formatDate(application.createdAt) : "—"}
-                            </td>
-                            <td className="px-4 py-3 space-x-2">
-                              <button
-                                className="bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600 text-sm transition-colors"
-                                onClick={() => updateLoanStatus(
-                                  application._id, 
-                                  "Approved", 
-                                  studentNumber, 
-                                  fullName
-                                )}
-                                disabled={application.status === "Approved"}
-                              >
-                                {application.status === "Approved" ? "✅ Approved" : "✅ Approve"}
-                              </button>
-                              <button
-                                className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600 text-sm transition-colors"
-                                onClick={() => updateLoanStatus(
-                                  application._id, 
-                                  "Rejected", 
-                                  studentNumber, 
-                                  fullName
-                                )}
-                                disabled={application.status === "Rejected"}
-                              >
-                                {application.status === "Rejected" ? "❌ Rejected" : "❌ Reject"}
-                              </button>
-                              <button
-                                className="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600 text-sm transition-colors"
-                                onClick={() => updateLoanStatus(
-                                  application._id, 
-                                  "Under Review", 
-                                  studentNumber, 
-                                  fullName
-                                )}
-                                disabled={application.status === "Under Review"}
-                              >
-                                {application.status === "Under Review" ? "🔍 Reviewing" : "🔍 Review"}
-                              </button>
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </div>
+            return (
+              <tr key={application._id}>
+                <td className="app-number">
+                  {application.applicationNumber || "N/A"}
+                </td>
+                <td className="student-name">{fullName}</td>
+                <td className="student-number">{studentNumber}</td>
+                <td className="program">{program}</td>
+                <td>
+                  <span className={`status-badge ${
+                    application.status === "Approved" ? "status-approved" :
+                    application.status === "Rejected" ? "status-rejected" :
+                    "status-pending"
+                  }`}>
+                    {application.status || "Pending"}
+                  </span>
+                </td>
+                <td className="date">
+                  {application.submittedAt ? formatDate(application.submittedAt) : 
+                  application.createdAt ? formatDate(application.createdAt) : "—"}
+                </td>
+                <td>
+                  <div className="compact-actions">
+                    <button
+                      className="btn-action btn-approve"
+                      onClick={() => updateLoanStatus(
+                        application._id, 
+                        "Approved", 
+                        studentNumber, 
+                        fullName
+                      )}
+                      disabled={application.status === "Approved"}
+                      title="Approve"
+                    >
+                      ✓
+                    </button>
+                    <button
+                      className="btn-action btn-reject"
+                      onClick={() => updateLoanStatus(
+                        application._id, 
+                        "Rejected", 
+                        studentNumber, 
+                        fullName
+                      )}
+                      disabled={application.status === "Rejected"}
+                      title="Reject"
+                    >
+                      ✕
+                    </button>
+                    <button
+                      className="btn-action btn-review"
+                      onClick={() => updateLoanStatus(
+                        application._id, 
+                        "Under Review", 
+                        studentNumber, 
+                        fullName
+                      )}
+                      disabled={application.status === "Under Review"}
+                      title="Mark for Review"
+                    >
+                      🔍
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
+  )}
+</div>
+
 
             {/* Agreements Table */}
-            <div className="bg-white shadow-md rounded-lg p-6">
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="text-lg font-semibold text-green-700">
-                  📄 Screening Agreements ({filteredAgreements.length})
-                </h3>
+            <div className="content-section">
+              <div className="section-header">
+                <h3>📄 Screening Agreements ({filteredAgreements.length})</h3>
               </div>
 
               {loading ? (
-                <div className="text-center py-8">
-                  <p className="text-gray-500">Loading agreements...</p>
+                <div className="loading-state">
+                  <div className="spinner"></div>
+                  <p>Loading agreements...</p>
                 </div>
               ) : filteredAgreements.length === 0 ? (
-                <div className="text-center py-8">
-                  <p className="text-gray-500">No screening agreements found.</p>
+                <div className="empty-state">
+                  <div className="empty-icon">📄</div>
+                  <p>No screening agreements found.</p>
                 </div>
               ) : (
                 <div className="overflow-x-auto">
-                  <table className="min-w-full text-sm text-left text-gray-700">
-                    <thead className="bg-gray-50 text-gray-600 uppercase">
+                  <table className="admin-table">
+                    <thead>
                       <tr>
-                        <th className="px-4 py-3">Student Name</th>
-                        <th className="px-4 py-3">Student Number</th>
-                        <th className="px-4 py-3">Program</th>
-                        <th className="px-4 py-3">Institution</th>
-                        <th className="px-4 py-3">Status</th>
-                        <th className="px-4 py-3">Date</th>
-                        <th className="px-4 py-3">Actions</th>
+                        <th>Student Name</th>
+                        <th>Student Number</th>
+                        <th>Program</th>
+                        <th>Institution</th>
+                        <th>Status</th>
+                        <th>Date</th>
+                        <th>Actions</th>
                       </tr>
                     </thead>
                     <tbody>
                       {filteredAgreements.map((agreement) => (
-                        <tr key={agreement._id} className="border-t hover:bg-gray-50">
-                          <td className="px-4 py-3 font-medium">{agreement.studentName}</td>
-                          <td className="px-4 py-3 font-mono text-blue-600">{agreement.studentNumber}</td>
-                          <td className="px-4 py-3">{agreement.program}</td>
-                          <td className="px-4 py-3">{agreement.institution}</td>
-                          <td className="px-4 py-3">
-                            <span className={`px-2 py-1 rounded text-xs font-medium ${
-                              agreement.status === "Approved" ? "bg-green-100 text-green-800" :
-                              agreement.status === "Rejected" ? "bg-red-100 text-red-800" :
-                              "bg-yellow-100 text-yellow-800"
+                        <tr key={agreement._id}>
+                          <td>{agreement.studentName}</td>
+                          <td className="user-number">{agreement.studentNumber}</td>
+                          <td>{agreement.program}</td>
+                          <td>{agreement.institution}</td>
+                          <td>
+                            <span className={`status-badge ${
+                              agreement.status === "Approved" ? "status-approved" :
+                              agreement.status === "Rejected" ? "status-rejected" :
+                              "status-pending"
                             }`}>
                               {agreement.status || "Pending"}
                             </span>
                           </td>
-                          <td className="px-4 py-3 text-gray-600">
+                          <td>
                             {agreement.createdAt ? formatDate(agreement.createdAt) : "—"}
                           </td>
-                          <td className="px-4 py-3 space-x-2">
-                            <button
-                              className="bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600 text-sm transition-colors"
-                              onClick={() => updateAgreementStatus(
-                                agreement._id, 
-                                "Approved", 
-                                agreement.studentNumber, 
-                                agreement.studentName
-                              )}
-                            >
-                              ✅ Approve
-                            </button>
-                            <button
-                              className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600 text-sm transition-colors"
-                              onClick={() => updateAgreementStatus(
-                                agreement._id, 
-                                "Rejected", 
-                                agreement.studentNumber, 
-                                agreement.studentName
-                              )}
-                            >
-                              ❌ Reject
-                            </button>
+                          <td>
+                            <div className="action-buttons">
+                              <button
+                                className="btn btn-success"
+                                onClick={() => updateAgreementStatus(
+                                  agreement._id, 
+                                  "Approved", 
+                                  agreement.studentNumber, 
+                                  agreement.studentName
+                                )}
+                              >
+                                ✅ Approve
+                              </button>
+                              <button
+                                className="btn btn-danger"
+                                onClick={() => updateAgreementStatus(
+                                  agreement._id, 
+                                  "Rejected", 
+                                  agreement.studentNumber, 
+                                  agreement.studentName
+                                )}
+                              >
+                                ❌ Reject
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       ))}
@@ -488,11 +483,6 @@ const AdminDashboard = () => {
         {/* User Management Tab */}
         {activeTab === "User Management" && (
           <UserManagement />
-        )}
-
-        {/* System Activity Tab */}
-        {activeTab === "System Activity" && (
-          <SystemActivity />
         )}
       </div>
     </div>
